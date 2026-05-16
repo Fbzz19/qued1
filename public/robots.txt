@@ -1,0 +1,43 @@
+# Qued robots.txt
+# Controls search engine crawler access
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /settings
+Disallow: /private
+Disallow: /account
+Disallow: */private
+Disallow: */settings
+Crawl-delay: 1
+Request-rate: 30/60
+
+# Specific rules for Google
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /settings
+Disallow: /private
+Disallow: /account
+
+# Specific rules for Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Disallow: /settings
+Disallow: /private
+Disallow: /account
+
+# Specific rules for other search engines
+User-agent: Slurp
+User-agent: DuckDuckBot
+User-agent: Baiduspider
+User-agent: YandexBot
+Allow: /
+Disallow: /admin
+Disallow: /settings
+Disallow: /private
+Disallow: /account
+
+# Sitemap reference
+Sitemap: https://myqued.com/sitemap.xml

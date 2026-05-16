@@ -41,12 +41,27 @@ export interface TMDBMedia {
   media_type?: string;
   genre_ids?: number[];
   genres?: { id: number; name: string }[];
+  belongs_to_collection?: {
+    id: number;
+    name: string;
+    poster_path: string | null;
+    backdrop_path: string | null;
+  } | null;
   runtime?: number;
   number_of_seasons?: number;
   number_of_episodes?: number;
   status?: string;
   tagline?: string;
   seasons?: TMDBSeason[];
+}
+
+export interface TMDBCollection {
+  id: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  parts: TMDBMedia[];
 }
 
 export interface TMDBPerson {
@@ -148,6 +163,7 @@ export const tmdb = {
 
   movieDetails: (id: number) => tmdbFetch<TMDBMedia>(`/movie/${id}`),
   tvDetails:    (id: number) => tmdbFetch<TMDBMedia>(`/tv/${id}`),
+  collectionDetails: (id: number) => tmdbFetch<TMDBCollection>(`/collection/${id}`),
 
   movieCredits: (id: number) => tmdbFetch<TMDBCredits>(`/movie/${id}/credits`),
   tvCredits:    (id: number) => tmdbFetch<TMDBCredits>(`/tv/${id}/credits`),

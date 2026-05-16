@@ -272,9 +272,9 @@ export default function LoggedInHomePage({ onMediaClick, onMembersClick, onFilms
 
     if (heroBackground) {
       if (heroBackground.backdrop_path) {
-        setHeroBackdrop(backdropUrl(heroBackground.backdrop_path, 'w1280'));
+        setHeroBackdrop(backdropUrl(heroBackground.backdrop_path, 'original'));
       } else if (heroBackground.poster_path) {
-        setHeroBackdrop(backdropUrl(heroBackground.poster_path, 'w1280'));
+        setHeroBackdrop(posterUrl(heroBackground.poster_path, 'original'));
       }
     } else {
       const lastWatched = allWatched[0];
@@ -283,7 +283,7 @@ export default function LoggedInHomePage({ onMediaClick, onMembersClick, onFilms
           const detail = lastWatched.media_type === 'tv'
             ? await tmdb.tvDetails(lastWatched.tmdb_id)
             : await tmdb.movieDetails(lastWatched.tmdb_id);
-          if (detail.backdrop_path) setHeroBackdrop(backdropUrl(detail.backdrop_path, 'w1280'));
+          if (detail.backdrop_path) setHeroBackdrop(backdropUrl(detail.backdrop_path, 'original'));
         } catch { /* fallback */ }
       }
     }
@@ -546,12 +546,13 @@ export default function LoggedInHomePage({ onMediaClick, onMembersClick, onFilms
 
       {/* ── Personalised Hero ─────────────────────────────── */}
       <div style={{ position: 'relative', minHeight: 'clamp(300px,45vh,460px)', overflow: 'hidden', display: 'flex', alignItems: 'flex-end' }}>
-        {/* Blurred backdrop */}
+        {/* Custom backdrop */}
         {heroBackdrop
-          ? <img src={heroBackdrop} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(16px) brightness(0.35)', transform: 'scale(1.08)' }} />
+          ? <img src={heroBackdrop} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.86) saturate(1.08)', transform: 'scale(1.01)' }} />
           : <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0a0a0a 0%, #111 100%)' }} />}
         {/* Gradient overlay */}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #000 0%, rgba(0,0,0,.7) 50%, rgba(0,0,0,.3) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #000 0%, rgba(0,0,0,.34) 46%, rgba(0,0,0,.08) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(0,0,0,.62) 0%, rgba(0,0,0,.22) 42%, rgba(0,0,0,.08) 100%)' }} />
         {/* Content */}
         <div style={{ position: 'relative', width: '100%', maxWidth: 1400, margin: '0 auto', padding: `clamp(32px,5vw,64px) ${pad} clamp(36px,5vw,56px)` }}>
           <p style={{ margin: '0 0 6px', color: 'rgba(245,158,11,.75)', fontSize: 13, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Welcome back</p>
@@ -585,10 +586,10 @@ export default function LoggedInHomePage({ onMediaClick, onMembersClick, onFilms
       {/* ── All sections ──────────────────────────────────── */}
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: `40px ${pad} 0`, display: 'flex', flexDirection: 'column', gap: 52 }}>
 
-        {/* Continue Watching */}
+        {/* Continue Tracking */}
         <FadeSection>
           <SectionHeader
-            title="Continue Watching"
+            title="Continue Tracking"
             icon={<Play size={18} color="#f59e0b" fill="#f59e0b" />}
           />
           {continueLoading ? (
@@ -596,7 +597,7 @@ export default function LoggedInHomePage({ onMediaClick, onMembersClick, onFilms
           ) : continueItems.length === 0 ? (
             <EmptyState
               icon={<Play size={32} />}
-              message="Nothing paused — start watching something new."
+              message="Nothing paused — start tracking something new."
               action={<button onClick={onFilmsClick} className="btn-gold" style={{ fontSize: 13, padding: '8px 20px', borderRadius: 10 }}>Browse</button>}
             />
           ) : (

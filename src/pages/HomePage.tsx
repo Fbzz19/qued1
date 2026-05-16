@@ -55,7 +55,6 @@ export default function HomePage({ onMediaClick, onSignUp, onFilmsClick, onSearc
   const [nowPlaying,      setNowPlaying]      = useState<TMDBMedia[]>([]);
   const [staffPicks,      setStaffPicks]      = useState<TMDBMedia[]>([]);
   const [fotw,            setFotw]            = useState<TMDBMedia | null>(null);
-  const [recentlyWatched, setRecentlyWatched] = useState<{ tmdb_id: number; media_type: string; title: string; poster_path: string; username: string }[]>([]);
   const [popularThisWeek, setPopularThisWeek] = useState<{ tmdb_id: number; media_type: string; title: string; poster_path: string; count: number }[]>([]);
   const [userCount,       setUserCount]       = useState<number | null>(null);
   const [loading,         setLoading]         = useState(true);
@@ -104,6 +103,8 @@ export default function HomePage({ onMediaClick, onSignUp, onFilmsClick, onSearc
       const hero = films.find(i => i.backdrop_path);
       setHeroItem(hero ?? null);
       setLoading(false);
+    }).catch(() => {
+      setLoading(false);
     });
 
     // Now playing in cinemas
@@ -137,27 +138,6 @@ export default function HomePage({ onMediaClick, onSignUp, onFilmsClick, onSearc
         } as TMDBMedia);
       });
 
-    // Recently watched by public users
-    supabase.from('watched')
-      .select('tmdb_id, media_type, title, poster_path, profiles!inner(username, is_public)')
-      .order('created_at', { ascending: false })
-      .limit(40)
-      .then(({ data }) => {
-        if (!data) return;
-        const seen = new Set<number>();
-        type WRow = { tmdb_id: number; media_type: string; title: string; poster_path: string; profiles: { username: string; is_public: boolean }[] };
-        const items = (data as WRow[])
-          .filter(w => Array.isArray(w.profiles) ? w.profiles[0]?.is_public !== false : true)
-          .filter(w => { if (seen.has(w.tmdb_id)) return false; seen.add(w.tmdb_id); return true; })
-          .slice(0, 10)
-          .map(w => ({
-            tmdb_id: w.tmdb_id, media_type: w.media_type, title: w.title,
-            poster_path: w.poster_path,
-            username: (Array.isArray(w.profiles) ? w.profiles[0]?.username : (w.profiles as unknown as { username: string })?.username) ?? 'Someone',
-          }));
-        setRecentlyWatched(items);
-      });
-
     // Popular this week among Qued users
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     supabase.from('watched').select('tmdb_id, media_type, title, poster_path').gte('created_at', weekAgo)
@@ -185,11 +165,12 @@ export default function HomePage({ onMediaClick, onSignUp, onFilmsClick, onSearc
 
       {/* Hero */}
       <div id="home">
-        {loading ? (
-          <div className="shimmer" style={{ height: 'clamp(420px, 65vh, 640px)', width: '100%' }} />
-        ) : heroItem ? (
-          <HeroBanner item={heroItem} isLoggedIn={!!user} onSignUp={onSignUp} userCount={userCount} />
-        ) : null}
+        <HeroBanner
+          item={heroItem}
+          isLoggedIn={!!user}
+          onSignUp={onSignUp}
+          userCount={userCount}
+        />
       </div>
 
       {/* Features bar */}
@@ -210,8 +191,8 @@ export default function HomePage({ onMediaClick, onSignUp, onFilmsClick, onSearc
       </div>
 
       {/* Explore QuedAI scroll button */}
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '28px 16px', background: '#0a0a0a' }}>
-        <ScrollPillButton label="Explore QuedAI" targetId="quedai" />
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '30px 16px 34px', background: '#0a0a0a', borderBottom: '1px solid #1a1a1a' }}>
+        <ScrollPillButton label="Explore QuedAI" targetId="quedai" featured icon="ai" />
       </div>
 
       {/* QuedAI Feature Section */}
@@ -269,7 +250,7 @@ export default function HomePage({ onMediaClick, onSignUp, onFilmsClick, onSearc
 
       {/* See Trending scroll button */}
       <div style={{ display: 'flex', justifyContent: 'center', padding: '28px 16px', background: 'linear-gradient(135deg, #0a0a0a 0%, #111 50%, #0a0a0a 100%)' }}>
-        <ScrollPillButton label="See Trending This Week" targetId="trending" />
+        <ScrollPillButton label="See Trending This Week" targetId="trending" featured icon="trending" />
       </div>
 
       {/* Sections */}
@@ -359,31 +340,6 @@ export default function HomePage({ onMediaClick, onSignUp, onFilmsClick, onSearc
           </div>
         )}
 
-        {/* Recently Watched by community */}
-        {recentlyWatched.length > 0 && (
-          <div style={{ marginTop: 48 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <Clock size={18} color="#f59e0b" />
-              <h2 style={{ margin: 0, color: '#fff', fontSize: 'clamp(15px,2vw,19px)', fontWeight: 700 }}>Recently Logged by Members</h2>
-            </div>
-            <div className="no-scrollbar" style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
-              {recentlyWatched.map(w => {
-                const ps = posterUrl(w.poster_path, 'w154');
-                return (
-                  <div key={w.tmdb_id} style={{ flexShrink: 0, width: 'clamp(80px,10vw,110px)', cursor: 'pointer' }}
-                    onClick={() => onMediaClick(w.tmdb_id, (w.media_type as 'movie' | 'tv') ?? 'movie')}>
-                    <div className="poster-card" style={{ aspectRatio: '2/3', width: '100%', marginBottom: 6 }}>
-                      {ps ? <img src={ps} alt={w.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
-                        : <div style={{ width: '100%', height: '100%', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Film size={16} color="#555" /></div>}
-                    </div>
-                    <p style={{ margin: 0, color: '#666', fontSize: 10, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>by {w.username}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
         {/* Popular This Week on Qued */}
         {popularThisWeek.length > 0 && (
           <div style={{ marginTop: 48 }}>
@@ -436,7 +392,12 @@ export default function HomePage({ onMediaClick, onSignUp, onFilmsClick, onSearc
   );
 }
 
-function ScrollPillButton({ label, targetId }: { label: string; targetId: string }) {
+function ScrollPillButton({ label, targetId, featured = false, icon = 'none' }: {
+  label: string;
+  targetId: string;
+  featured?: boolean;
+  icon?: 'ai' | 'trending' | 'none';
+}) {
   const [hovered, setHovered] = useState(false);
 
   function scrollTo() {
@@ -451,23 +412,25 @@ function ScrollPillButton({ label, targetId }: { label: string; targetId: string
       onMouseLeave={() => setHovered(false)}
       style={{
         display: 'inline-flex',
-        flexDirection: 'column',
+        flexDirection: featured ? 'row' : 'column',
         alignItems: 'center',
-        gap: 6,
-        padding: '12px 28px 10px',
-        background: hovered ? 'rgba(245,158,11,.12)' : 'rgba(245,158,11,.06)',
-        border: `1px solid ${hovered ? 'rgba(245,158,11,.55)' : 'rgba(245,158,11,.25)'}`,
+        gap: featured ? 10 : 6,
+        padding: featured ? '14px 28px' : '12px 28px 10px',
+        background: hovered ? 'rgba(245,158,11,.16)' : featured ? 'rgba(245,158,11,.10)' : 'rgba(245,158,11,.06)',
+        border: `1px solid ${hovered ? 'rgba(245,158,11,.62)' : featured ? 'rgba(245,158,11,.38)' : 'rgba(245,158,11,.25)'}`,
         borderRadius: 100,
         cursor: 'pointer',
         fontFamily: 'inherit',
         transition: 'background .25s, border-color .25s, box-shadow .25s, transform .2s',
-        boxShadow: hovered ? '0 0 24px rgba(245,158,11,.25)' : '0 0 0px rgba(245,158,11,0)',
+        boxShadow: hovered ? '0 0 30px rgba(245,158,11,.28)' : featured ? '0 0 22px rgba(245,158,11,.14)' : '0 0 0px rgba(245,158,11,0)',
         transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
       }}
     >
-      <span style={{ color: '#fbbf24', fontSize: 13, fontWeight: 600, letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{label}</span>
+      {featured && icon === 'ai' && <Sparkles size={16} color="#f59e0b" />}
+      {featured && icon === 'trending' && <TrendingUp size={16} color="#f59e0b" />}
+      <span style={{ color: '#fbbf24', fontSize: featured ? 14 : 13, fontWeight: featured ? 800 : 600, letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{label}</span>
       <ChevronDown
-        size={16}
+        size={featured ? 18 : 16}
         color="#f59e0b"
         style={{ animation: 'chevronBounce 1.6s ease-in-out infinite' }}
       />
@@ -475,8 +438,17 @@ function ScrollPillButton({ label, targetId }: { label: string; targetId: string
   );
 }
 
-function HeroBanner({ item, isLoggedIn, onSignUp, userCount }: { item: TMDBMedia; isLoggedIn: boolean; onSignUp?: () => void; userCount: number | null }) {
-  const backdrop = item.backdrop_path ? backdropUrl(item.backdrop_path, 'original') : null;
+function HeroBanner({ item, isLoggedIn, onSignUp, userCount }: {
+  item: TMDBMedia | null;
+  isLoggedIn: boolean;
+  onSignUp?: () => void;
+  userCount: number | null;
+}) {
+  const backdrop = item?.backdrop_path ? backdropUrl(item.backdrop_path, 'original') : null;
+  function scrollToTrending() {
+    document.getElementById('trending')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   return (
     <div style={{ position: 'relative', minHeight: 'clamp(520px, 72vh, 700px)', overflow: 'hidden', display: 'flex', alignItems: 'flex-end' }}>
       {backdrop
@@ -485,22 +457,40 @@ function HeroBanner({ item, isLoggedIn, onSignUp, userCount }: { item: TMDBMedia
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #000 0%, rgba(0,0,0,.85) 35%, rgba(0,0,0,.3) 70%, rgba(0,0,0,.15) 100%)' }} />
       <div style={{ position: 'relative', width: '100%', padding: 'clamp(32px,5vw,72px) clamp(20px,4vw,72px) clamp(48px,6vw,80px)', maxWidth: 1400, margin: '0 auto' }}>
         <div style={{ maxWidth: 680 }}>
-          <h1 style={{ margin: '0 0 16px', color: '#fff', fontSize: 'clamp(28px,5vw,58px)', fontWeight: 800, letterSpacing: '-1.5px', lineHeight: 1.05 }}>
-            Track films. Discover hidden gems. Get AI&#8209;powered recommendations tailored to your taste.
+          <h1 style={{ margin: '0 0 16px', color: '#fff', fontSize: 'clamp(32px,5vw,64px)', fontWeight: 850, letterSpacing: '-1.2px', lineHeight: 1.02 }}>
+            Your films, shows, ratings, and watchlist in one cinematic home.
           </h1>
-          <p style={{ margin: '0 0 28px', color: 'rgba(255,255,255,0.65)', fontSize: 'clamp(14px,1.8vw,18px)', fontWeight: 400, lineHeight: 1.6 }}>
-            Join thousands of film lovers tracking, rating, and discovering films together.
+          <p style={{ margin: '0 0 28px', color: 'rgba(255,255,255,0.68)', fontSize: 'clamp(15px,1.8vw,19px)', fontWeight: 400, lineHeight: 1.6, maxWidth: 620 }}>
+            Build your diary, follow other film lovers, and let QuedAI help you find the next thing worth watching.
           </p>
           {!isLoggedIn && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
-              <button
-                onClick={() => onSignUp?.()}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 32px', background: '#f59e0b', border: 'none', borderRadius: 14, color: '#000', fontSize: 16, fontWeight: 800, cursor: 'pointer', transition: 'background .2s, transform .15s, box-shadow .2s', fontFamily: 'inherit', boxShadow: '0 0 40px rgba(245,158,11,.5)' }}
-                onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#fbbf24'; b.style.transform = 'scale(1.03)'; b.style.boxShadow = '0 0 60px rgba(245,158,11,.7)'; }}
-                onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#f59e0b'; b.style.transform = 'scale(1)'; b.style.boxShadow = '0 0 40px rgba(245,158,11,.5)'; }}
-              >
-                Start Tracking Free
-              </button>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => onSignUp?.()}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 28px', background: '#f59e0b', border: 'none', borderRadius: 14, color: '#000', fontSize: 16, fontWeight: 800, cursor: 'pointer', transition: 'background .2s, transform .15s, box-shadow .2s', fontFamily: 'inherit', boxShadow: '0 0 40px rgba(245,158,11,.5)' }}
+                  onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#fbbf24'; b.style.transform = 'scale(1.03)'; b.style.boxShadow = '0 0 60px rgba(245,158,11,.7)'; }}
+                  onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = '#f59e0b'; b.style.transform = 'scale(1)'; b.style.boxShadow = '0 0 40px rgba(245,158,11,.5)'; }}
+                >
+                  <Clapperboard size={18} />
+                  Start Tracking Free
+                </button>
+                <button
+                  onClick={scrollToTrending}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 22px', background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.18)', borderRadius: 14, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', transition: 'background .2s, border-color .2s, transform .15s', fontFamily: 'inherit', backdropFilter: 'blur(12px)' }}
+                  onMouseEnter={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'rgba(255,255,255,.14)'; b.style.borderColor = 'rgba(255,255,255,.34)'; b.style.transform = 'translateY(-1px)'; }}
+                  onMouseLeave={e => { const b = e.currentTarget as HTMLButtonElement; b.style.background = 'rgba(255,255,255,.08)'; b.style.borderColor = 'rgba(255,255,255,.18)'; b.style.transform = 'translateY(0)'; }}
+                >
+                  <TrendingUp size={17} />
+                  Explore Trending
+                </button>
+              </div>
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', color: 'rgba(255,255,255,.58)', fontSize: 12 }}>
+                <span>Diary</span>
+                <span>Watchlist</span>
+                <span>Reviews</span>
+                <span>QuedAI picks</span>
+              </div>
               {userCount != null && userCount > 0 && (
                 <p style={{ margin: 0, color: 'rgba(255,255,255,.45)', fontSize: 13 }}>
                   Join <strong style={{ color: 'rgba(255,255,255,.7)' }}>{userCount.toLocaleString()}</strong> film lovers already on Qued
@@ -544,8 +534,8 @@ function PosterSection({ title, icon, items, loading, onMediaClick, showRanks, m
     setShowAll(a => !a);
   }
 
-  const COLS = 7;
-  const SKELETON_COUNT = COLS * 2;
+  const POSTER_WIDTH = 'clamp(80px,10vw,120px)';
+  const SKELETON_COUNT = 14;
 
   return (
     <div ref={containerRef}>
@@ -569,8 +559,9 @@ function PosterSection({ title, icon, items, loading, onMediaClick, showRanks, m
         /* Grid view — fixed columns so all rows have the same count */
         <div style={{
           display: 'grid',
-          gridTemplateColumns: `repeat(${COLS}, 1fr)`,
+          gridTemplateColumns: `repeat(auto-fill, minmax(${POSTER_WIDTH}, ${POSTER_WIDTH}))`,
           gap: 10,
+          justifyContent: 'start',
         }}>
           {loading
             ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
@@ -594,12 +585,12 @@ function PosterSection({ title, icon, items, loading, onMediaClick, showRanks, m
           <div ref={scrollRef} className="no-scrollbar" style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
             {loading
               ? Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} style={{ flexShrink: 0, width: 'clamp(80px,10vw,120px)' }}>
+                  <div key={i} style={{ flexShrink: 0, width: POSTER_WIDTH }}>
                     <div className="shimmer" style={{ aspectRatio: '2/3', borderRadius: 8 }} />
                   </div>
                 ))
               : items.map((item, idx) => (
-                  <div key={item.id} style={{ flexShrink: 0, width: 'clamp(80px,10vw,120px)' }}>
+                  <div key={item.id} style={{ flexShrink: 0, width: POSTER_WIDTH }}>
                     <PosterThumb item={item} idx={idx} onMediaClick={onMediaClick} showRank={showRanks} mediaTypeOverride={mediaTypeOverride} />
                   </div>
                 ))

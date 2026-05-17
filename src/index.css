@@ -68,6 +68,80 @@
 
 * { box-sizing: border-box; }
 
+html {
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+img {
+  max-width: 100%;
+}
+
+button,
+a,
+[role="button"] {
+  -webkit-tap-highlight-color: rgba(245, 158, 11, .16);
+  touch-action: manipulation;
+}
+
+.media-hero .trailer-fab {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(54px, 5vw, 68px);
+  height: clamp(54px, 5vw, 68px);
+  border-radius: 50%;
+  border: 1px solid rgba(245, 158, 11, .46);
+  background: rgba(0, 0, 0, .52);
+  color: #fbbf24;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: .72;
+  transform: translate(-50%, -50%) scale(.96);
+  transition: opacity .18s ease, transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, .12), 0 0 32px rgba(245, 158, 11, .28), 0 14px 36px rgba(0, 0, 0, .58);
+  backdrop-filter: blur(10px);
+  z-index: 4;
+}
+
+.media-hero:hover .trailer-fab,
+.media-hero .trailer-fab:focus-visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.media-hero .trailer-fab:hover,
+.media-hero .trailer-fab:focus-visible {
+  background: rgba(245, 158, 11, .94);
+  border-color: rgba(251, 191, 36, .85);
+  color: #000;
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, .35), 0 0 34px rgba(245, 158, 11, .4), 0 14px 36px rgba(0, 0, 0, .58);
+  outline: none;
+}
+
+.media-hero .trailer-fab svg {
+  width: 42%;
+  height: 42%;
+  margin-left: 3px;
+}
+
+@media (hover: none), (max-width: 768px) {
+  .media-hero .trailer-fab {
+    width: 56px;
+    height: 56px;
+    opacity: .88;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .media-hero .trailer-fab {
+    transition: none;
+  }
+}
+
 /* ── Light mode ──────────────────────────────────────────────────────────── */
 html[data-theme="light"] {
   --bg:           #F6F4EF;
@@ -355,6 +429,10 @@ body {
   margin: 0;
 }
 
+main {
+  overflow-x: clip;
+}
+
 ::-webkit-scrollbar          { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track    { background: #111; }
 ::-webkit-scrollbar-thumb    { background: #3a3a3a; border-radius: 2px; }
@@ -446,4 +524,36 @@ div:hover > .remove-btn { opacity: 1 !important; }
 
 @media (max-width: 767px) {
   body { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+  .poster-card {
+    transition: box-shadow .18s ease;
+    box-shadow: 0 2px 12px rgba(0,0,0,.45);
+  }
+
+  .poster-card:hover {
+    transform: none;
+    box-shadow: 0 4px 18px rgba(0,0,0,.65), 0 0 0 1px rgba(245,158,11,.22);
+  }
+
+  .btn-gold,
+  .btn-ghost {
+    min-height: 44px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
 }

@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback } from 'react';
-import { ArrowLeft, Plus, Check, Heart, Star, ChevronDown, ChevronUp, Film, TriangleAlert as AlertTriangle, Eye, EyeOff, MessageSquare, Send, BadgeCheck, Play, Pause } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { ArrowLeft, Plus, Check, Heart, Star, ChevronDown, ChevronUp, Film, TriangleAlert as AlertTriangle, Eye, EyeOff, MessageSquare, Send, BadgeCheck, Play, Pause, X } from 'lucide-react';
 import { recordRecentlyViewed, setPaused, clearPaused } from './LoggedInHomePage';
 import { containsOffensiveContent, likelyContainsSpoilers, MODERATION_ERROR, recordOffensiveStrike, isUserSuspended } from '../lib/moderation';
 import { tmdb, posterUrl, profileUrl, backdropUrl } from '../lib/tmdb';
-import type { TMDBMedia, TMDBCredits, TMDBSeason, TMDBSeasonDetails, TMDBWatchProvider, TMDBWatchRegion } from '../lib/tmdb';
+import type { TMDBMedia, TMDBCredits, TMDBSeason, TMDBSeasonDetails, TMDBVideo, TMDBWatchProvider, TMDBWatchRegion } from '../lib/tmdb';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../context/I18nContext';
@@ -11,6 +11,24 @@ import StarRating from '../components/StarRating';
 import type { QuickAddMedia } from '../components/QuickAddModal';
 
 const HALF_STARS = [0.5,1,1.5,2,2.5,3,3.5,4,4.5,5];
+
+function errorMessage(err: unknown, fallback: string) {
+  if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
+    return err.message;
+  }
+  if (err instanceof Error) return err.message;
+  return fallback;
+}
+
+function pickTrailer(videos: TMDBVideo[]) {
+  const youtubeVideos = videos.filter(v => v.site === 'YouTube' && v.key);
+  return youtubeVideos.find(v => v.official && v.type === 'Trailer')
+    ?? youtubeVideos.find(v => v.type === 'Trailer')
+    ?? youtubeVideos.find(v => v.official && v.type === 'Teaser')
+    ?? youtubeVideos.find(v => v.type === 'Teaser')
+    ?? youtubeVideos[0]
+    ?? null;
+}
 
 interface Props {
   id: number;
@@ -28,6 +46,7 @@ interface ReviewWithUser {
   rating: number | null;
   is_public: boolean;
   has_spoilers?: boolean;
+  contains_spoilers?: boolean;
   like_count?: number;
   comment_count?: number;
   pinned?: boolean;
@@ -53,6 +72,9 @@ export default function MediaDetailPage({ id, type, onBack, onActorClick, onQuic
   const [reviews,        setReviews]        = useState<ReviewWithUser[]>([]);
   const [watchRegion,    setWatchRegion]    = useState<TMDBWatchRegion | null>(null);
   const [likedReviewIds, setLikedReviewIds] = useState<Set<string>>(new Set());
+  const [trailer,        setTrailer]        = useState<TMDBVideo | null>(null);
+  const [trailerOpen,    setTrailerOpen]    = useState(false);
+  const trailerCloseRef = useRef<HTMLButtonElement>(null);
 
   // Pause / continue-watching state
   const [isPaused,        setIsPaused]        = useState(false);
@@ -75,15 +97,19 @@ export default function MediaDetailPage({ id, type, onBack, onActorClick, onQuic
     setLoading(true);
     setReviews([]);
     setWatchRegion(null);
+    setTrailer(null);
+    setTrailerOpen(false);
     Promise.all([
       type === 'movie' ? tmdb.movieDetails(id) : tmdb.tvDetails(id),
       type === 'movie' ? tmdb.movieCredits(id) : tmdb.tvCredits(id),
       tmdb.watchProviders(type, id),
-    ]).then(([m, c, wp]) => {
+      tmdb.videos(type, id).catch(() => ({ results: [] as TMDBVideo[] })),
+    ]).then(([m, c, wp, videos]) => {
       setMedia(m);
       setCredits(c);
       if (type === 'tv') setSeasons(((m as unknown as Record<string, unknown>).seasons as TMDBSeason[] ?? []).filter((s: TMDBSeason) => s.season_number > 0));
       setWatchRegion((wp as { results: Record<string, TMDBWatchRegion> }).results?.GB ?? null);
+      setTrailer(pickTrailer(videos.results ?? []));
       setLoading(false);
     });
   }, [id, type]);
@@ -103,6 +129,24 @@ export default function MediaDetailPage({ id, type, onBack, onActorClick, onQuic
         }
       });
   }, [user, media, id, type]);
+
+  useEffect(() => {
+    if (!trailerOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.setTimeout(() => trailerCloseRef.current?.focus(), 0);
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setTrailerOpen(false);
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [trailerOpen]);
 
   useEffect(() => {
     if (!user || !media) return;
@@ -153,20 +197,35 @@ export default function MediaDetailPage({ id, type, onBack, onActorClick, onQuic
       });
     }
 
+    const reviewIds = publicData.map(r => r.id);
+    const { data: reviewLikeRows } = reviewIds.length
+      ? await supabase.from('review_likes').select('review_id,user_id').in('review_id', reviewIds)
+      : { data: [] };
+    const reviewLikeCounts: Record<string, number> = {};
+    const userLikedReviews = new Set<string>();
+    (reviewLikeRows ?? []).forEach((l: { review_id: string; user_id: string }) => {
+      reviewLikeCounts[l.review_id] = (reviewLikeCounts[l.review_id] ?? 0) + 1;
+      if (user && l.user_id === user.id) userLikedReviews.add(l.review_id);
+    });
+    const { data: commentRows } = reviewIds.length
+      ? await supabase.from('review_comments').select('review_id').in('review_id', reviewIds)
+      : { data: [] };
+    const commentCounts: Record<string, number> = {};
+    (commentRows ?? []).forEach((c: { review_id: string }) => {
+      commentCounts[c.review_id] = (commentCounts[c.review_id] ?? 0) + 1;
+    });
+
     const mapped = publicData.map(r => ({
       ...r,
+      has_spoilers: Boolean(r.has_spoilers ?? r.contains_spoilers),
+      like_count: reviewLikeCounts[r.id] ?? r.like_count ?? 0,
+      comment_count: commentCounts[r.id] ?? 0,
       username: pmap[r.user_id]?.username ?? 'Unknown',
       avatar_url: pmap[r.user_id]?.avatar_url ?? '',
       is_verified: pmap[r.user_id]?.is_verified ?? false,
     }));
     setReviews(mapped);
-
-    // Load which reviews current user liked
-    if (user && publicData.length) {
-      const reviewIds = publicData.map(r => r.id);
-      const { data: likedRows } = await supabase.from('review_likes').select('review_id').eq('user_id', user.id).in('review_id', reviewIds);
-      setLikedReviewIds(new Set((likedRows ?? []).map((l: { review_id: string }) => l.review_id)));
-    }
+    setLikedReviewIds(userLikedReviews);
 
     // Load own review separately (may be private — not in public list above)
     if (user) {
@@ -177,6 +236,7 @@ export default function MediaDetailPage({ id, type, onBack, onActorClick, onQuic
         setUserReview(own.content ?? '');
         setUserRating(Number(own.rating) || 0);
         setReviewPublic(own.is_public);
+        setSpoilerConfirmed(Boolean(own.has_spoilers ?? own.contains_spoilers));
       } else {
         setOwnReviewId(null);
       }
@@ -195,6 +255,12 @@ export default function MediaDetailPage({ id, type, onBack, onActorClick, onQuic
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'ratings', filter: `tmdb_id=eq.${id}` }, () => {
         loadRatings();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'review_likes' }, () => {
+        loadReviews();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'review_comments' }, () => {
+        loadReviews();
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -290,12 +356,16 @@ export default function MediaDetailPage({ id, type, onBack, onActorClick, onQuic
     }
 
     // ── Persist to Supabase ────────────────────────────────────────────────
-    if (userRating > 0) {
-      await supabase.from('ratings').upsert(
+    try {
+      if (userRating > 0) {
+      const { error: ratingErr } = await supabase.from('ratings').upsert(
         { user_id: user.id, tmdb_id: id, media_type: type, rating: userRating, updated_at: now },
         { onConflict: 'user_id,tmdb_id,media_type' }
       );
-    }
+        if (ratingErr) {
+          // The review row also stores the rating, so do not block the review save.
+        }
+      }
 
     if (trimmed || userRating > 0) {
       const reviewPayload = {
@@ -304,18 +374,62 @@ export default function MediaDetailPage({ id, type, onBack, onActorClick, onQuic
         rating: userRating > 0 ? userRating : null,
         is_public: reviewPublic,
         has_spoilers: hasSpoiler,
+        contains_spoilers: hasSpoiler,
         updated_at: now,
       };
 
-      // Always upsert — handles both first-save and re-save (unique: user_id,tmdb_id,media_type)
-      const { data: upserted } = await supabase.from('reviews').upsert(
-        { ...reviewPayload },
-        { onConflict: 'user_id,tmdb_id,media_type' }
-      ).select().maybeSingle();
+      // Save without relying on an online database upsert constraint.
+      let knownReviewId = ownReviewId ?? existingInList?.id ?? null;
+      if (!knownReviewId) {
+        const { data: existingRows, error: lookupErr } = await supabase
+          .from('reviews')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('tmdb_id', id)
+          .eq('media_type', type)
+          .order('updated_at', { ascending: false })
+          .limit(1);
+        if (lookupErr) throw lookupErr;
+        knownReviewId = existingRows?.[0]?.id ?? null;
+      }
+
+      let saveResult = knownReviewId
+        ? await supabase.from('reviews')
+          .update(reviewPayload)
+          .eq('id', knownReviewId)
+          .eq('user_id', user.id)
+          .select()
+          .maybeSingle()
+        : await supabase.from('reviews')
+          .insert(reviewPayload)
+          .select()
+          .single();
+
+      if (!knownReviewId && saveResult.error?.code === '23505') {
+        saveResult = await supabase.from('reviews')
+          .update(reviewPayload)
+          .eq('user_id', user.id)
+          .eq('tmdb_id', id)
+          .eq('media_type', type)
+          .select()
+          .maybeSingle();
+      }
+
+      const { data: upserted, error: reviewErr } = saveResult;
+      if (reviewErr) throw reviewErr;
+      if (!upserted) throw new Error('Your review could not be saved.');
       if (upserted) {
         setOwnReviewId(upserted.id);
         setReviews(rs => rs.map(r => r.id.startsWith('temp-') ? { ...r, id: upserted.id } : r));
       }
+    }
+    } catch (err) {
+      const message = errorMessage(err, 'Your review could not be saved. Please try again.');
+      setReviewError(message);
+      await loadRatings();
+      await loadReviews();
+      setSavingReview(false);
+      return;
     }
 
     // Auto-add to diary when the user rates or reviews
@@ -354,8 +468,8 @@ export default function MediaDetailPage({ id, type, onBack, onActorClick, onQuic
     }
 
     // Sync true DB state in background (no visual flicker since optimistic already applied)
-    loadRatings();
-    loadReviews();
+    await loadRatings();
+    await loadReviews();
 
     setSavingReview(false);
     setReviewSaved(true);
@@ -371,25 +485,31 @@ export default function MediaDetailPage({ id, type, onBack, onActorClick, onQuic
     setLikedReviewIds(s => { const n = new Set(s); newLiked ? n.add(reviewId) : n.delete(reviewId); return n; });
     setReviews(rs => rs.map(r => r.id === reviewId ? { ...r, like_count: Math.max(0, newCount) } : r));
 
-    if (newLiked) {
-      await supabase.from('review_likes').insert({ review_id: reviewId, user_id: user.id });
-      await supabase.from('reviews').update({ like_count: newCount }).eq('id', reviewId);
-      // Notify review owner
-      const review = reviews.find(r => r.id === reviewId);
-      if (review && review.user_id !== user.id) {
-        await supabase.from('notifications').insert({
-          user_id: review.user_id,
-          type: 'review_like',
-          actor_id: user.id,
-          reference_id: reviewId,
-          reference_type: 'review',
-          message: `liked your review`,
-          seen: false,
-        });
+    try {
+      if (newLiked) {
+        const { error } = await supabase.from('review_likes').insert({ review_id: reviewId, user_id: user.id });
+        if (error && error.code !== '23505') throw error;
+        // Notify review owner
+        const review = reviews.find(r => r.id === reviewId);
+        if (review && review.user_id !== user.id) {
+          await supabase.from('notifications').insert({
+            user_id: review.user_id,
+            type: 'review_like',
+            actor_id: user.id,
+            reference_id: reviewId,
+            reference_type: 'review',
+            message: `liked your review`,
+            seen: false,
+          });
+        }
+      } else {
+        const { error } = await supabase.from('review_likes').delete().eq('review_id', reviewId).eq('user_id', user.id);
+        if (error) throw error;
       }
-    } else {
-      await supabase.from('review_likes').delete().eq('review_id', reviewId).eq('user_id', user.id);
-      await supabase.from('reviews').update({ like_count: Math.max(0, newCount) }).eq('id', reviewId);
+      loadReviews();
+    } catch {
+      setLikedReviewIds(s => { const n = new Set(s); currentLiked ? n.add(reviewId) : n.delete(reviewId); return n; });
+      setReviews(rs => rs.map(r => r.id === reviewId ? { ...r, like_count: currentCount } : r));
     }
   }
 
@@ -435,22 +555,33 @@ export default function MediaDetailPage({ id, type, onBack, onActorClick, onQuic
 
   const title    = media.title || media.name || '';
   const year     = (media.release_date || media.first_air_date || '').slice(0, 4);
-  const backdrop = backdropUrl(media.backdrop_path, 'original');
-  const poster   = posterUrl(media.poster_path, 'w500');
+  const backdrop = backdropUrl(media.backdrop_path, 'w1280');
+  const poster   = posterUrl(media.poster_path, 'w342');
   const director = credits?.crew.find(c => c.job === 'Director');
   const cast     = credits?.cast.slice(0, 20) ?? [];
 
   return (
     <div style={{ minHeight: '100vh', background: '#000', paddingBottom: 96 }} className="animate-fade-in">
       {/* Backdrop */}
-      <div style={{ position: 'relative', height: 'clamp(200px,35vw,380px)' }}>
+      <div className="media-hero" style={{ position: 'relative', height: 'clamp(200px,35vw,380px)' }}>
         {backdrop
-          ? <img src={backdrop} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ? <img src={backdrop} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} decoding="async" />
           : <div style={{ width: '100%', height: '100%', background: '#111' }} />}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,.2), rgba(0,0,0,.1) 50%, #000)' }} />
         <button onClick={onBack} style={{ position: 'absolute', top: 16, left: 16, background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(4px)', border: 'none', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <ArrowLeft size={18} color="#fff" />
         </button>
+        {trailer && (
+          <button
+            type="button"
+            className="trailer-fab"
+            onClick={() => setTrailerOpen(true)}
+            aria-label={`Watch trailer for ${title}`}
+            title="Watch trailer"
+          >
+            <Play size={18} fill="currentColor" aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {/* Two-column layout */}
@@ -461,7 +592,7 @@ export default function MediaDetailPage({ id, type, onBack, onActorClick, onQuic
           <div style={{ flexShrink: 0, width: 'clamp(120px,16vw,200px)' }}>
             <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid #2e2e2e', boxShadow: '0 8px 32px rgba(0,0,0,.9)', marginBottom: 14 }}>
               {poster
-                ? <img src={poster} alt={title} style={{ width: '100%', aspectRatio: '2/3', objectFit: 'cover', display: 'block' }} />
+                ? <img src={poster} alt={title} style={{ width: '100%', aspectRatio: '2/3', objectFit: 'cover', display: 'block' }} decoding="async" />
                 : <div style={{ background: '#1a1a1a', aspectRatio: '2/3', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Film size={24} color="#555" /></div>}
             </div>
 
@@ -778,6 +909,46 @@ export default function MediaDetailPage({ id, type, onBack, onActorClick, onQuic
           </div>
         </div>
       </div>
+
+      {trailerOpen && trailer && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${title} trailer`}
+          onClick={() => setTrailerOpen(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,.82)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(16px,4vw,48px)' }}
+        >
+          <div
+            className="animate-slide-up"
+            onClick={e => e.stopPropagation()}
+            style={{ width: 'min(960px, 100%)', background: '#070707', border: '1px solid #242424', borderRadius: 18, overflow: 'hidden', boxShadow: '0 30px 90px rgba(0,0,0,.85)' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 14px', borderBottom: '1px solid #191919' }}>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ margin: 0, color: '#fff', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{trailer.name || `${title} trailer`}</p>
+                <p style={{ margin: '2px 0 0', color: '#555', fontSize: 11 }}>{title}</p>
+              </div>
+              <button
+                ref={trailerCloseRef}
+                onClick={() => setTrailerOpen(false)}
+                aria-label="Close trailer"
+                style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid #2e2e2e', background: '#111', color: '#aaa', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div style={{ aspectRatio: '16 / 9', background: '#000' }}>
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${trailer.key}?autoplay=1&rel=0&modestbranding=1&playsinline=1&vq=hd1080`}
+                title={trailer.name || `${title} trailer`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                style={{ width: '100%', height: '100%', border: 0, display: 'block' }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -849,8 +1020,16 @@ function ReviewCard({ review, currentUserId, isGuest, isLiked, onRequireAuth, on
   const [localCommentCount, setLocalCommentCount] = useState(review.comment_count ?? 0);
   const showSpoilerBlur = review.has_spoilers && !spoilerRevealed;
 
+  useEffect(() => {
+    setLocalCommentCount(review.comment_count ?? 0);
+  }, [review.comment_count, review.id]);
+
   async function loadComments() {
-    const { data } = await supabase.from('review_comments').select('*').eq('review_id', review.id).order('created_at', { ascending: true });
+    const { data, error } = await supabase.from('review_comments').select('*').eq('review_id', review.id).order('created_at', { ascending: true });
+    if (error) {
+      setCommentError(errorMessage(error, 'Replies could not be loaded.'));
+      return;
+    }
     if (!data) return;
     const uids = [...new Set(data.map(c => c.user_id))];
     let pmap: Record<string, { username: string; avatar_url: string }> = {};
@@ -858,12 +1037,18 @@ function ReviewCard({ review, currentUserId, isGuest, isLiked, onRequireAuth, on
       const { data: profiles } = await supabase.from('profiles').select('id,username,avatar_url').in('id', uids);
       (profiles ?? []).forEach((p: { id: string; username: string; avatar_url: string }) => { pmap[p.id] = p; });
     }
+    const commentIds = data.map(c => c.id);
+    const { data: likeRows } = commentIds.length
+      ? await supabase.from('comment_likes').select('comment_id,user_id').in('comment_id', commentIds)
+      : { data: [] };
+    const likeCounts: Record<string, number> = {};
     let likedSet = new Set<string>();
-    if (user) {
-      const { data: cl } = await supabase.from('comment_likes').select('comment_id').eq('user_id', user.id).in('comment_id', data.map(c => c.id));
-      likedSet = new Set((cl ?? []).map((l: { comment_id: string }) => l.comment_id));
-    }
-    setComments(data.map(c => ({ ...c, username: pmap[c.user_id]?.username, avatar_url: pmap[c.user_id]?.avatar_url, isLiked: likedSet.has(c.id) })));
+    (likeRows ?? []).forEach((l: { comment_id: string; user_id: string }) => {
+      likeCounts[l.comment_id] = (likeCounts[l.comment_id] ?? 0) + 1;
+      if (user && l.user_id === user.id) likedSet.add(l.comment_id);
+    });
+    setComments(data.map(c => ({ ...c, like_count: likeCounts[c.id] ?? c.like_count ?? 0, username: pmap[c.user_id]?.username, avatar_url: pmap[c.user_id]?.avatar_url, isLiked: likedSet.has(c.id) })));
+    setLocalCommentCount(data.length);
     setCommentsLoaded(true);
   }
 
@@ -878,32 +1063,55 @@ function ReviewCard({ review, currentUserId, isGuest, isLiked, onRequireAuth, on
     const suspended = await isUserSuspended(user.id, supabase);
     if (suspended) { setCommentError('Your account is suspended.'); return; }
 
-    const { data: newComment } = await supabase.from('review_comments').insert({ review_id: review.id, user_id: user.id, content: commentText.trim() }).select().single();
+    const { data: newComment, error: commentErr } = await supabase.from('review_comments').insert({ review_id: review.id, user_id: user.id, content: commentText.trim() }).select().single();
+    if (commentErr) {
+      setCommentError(errorMessage(commentErr, 'Your reply could not be saved.'));
+      return;
+    }
     if (newComment) {
       // Notify review owner
       if (review.user_id !== user.id) {
         await supabase.from('notifications').insert({ user_id: review.user_id, type: 'review_comment', actor_id: user.id, reference_id: review.id, reference_type: 'review', message: `commented on your review`, seen: false });
       }
       const newCount = localCommentCount + 1;
-      // Update comment_count in DB and local state instantly
-      await supabase.from('reviews').update({ comment_count: newCount }).eq('id', review.id);
       setLocalCommentCount(newCount);
       onCommentCountChange?.(1);
       setCommentText('');
-      loadComments();
+      await loadComments();
+    } else {
+      setCommentError('Your reply could not be saved.');
     }
   }
 
   async function toggleCommentLike(commentId: string, curLiked: boolean, curCount: number) {
     if (!user) return;
+    setCommentError('');
     const newCount = curCount + (curLiked ? -1 : 1);
     setComments(cs => cs.map(c => c.id === commentId ? { ...c, isLiked: !curLiked, like_count: Math.max(0, newCount) } : c));
-    if (curLiked) {
-      await supabase.from('comment_likes').delete().eq('comment_id', commentId).eq('user_id', user.id);
-      await supabase.from('review_comments').update({ like_count: Math.max(0, newCount) }).eq('id', commentId);
-    } else {
-      await supabase.from('comment_likes').insert({ comment_id: commentId, user_id: user.id });
-      await supabase.from('review_comments').update({ like_count: newCount }).eq('id', commentId);
+    try {
+      if (curLiked) {
+        const { error } = await supabase.from('comment_likes').delete().eq('comment_id', commentId).eq('user_id', user.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('comment_likes').insert({ comment_id: commentId, user_id: user.id });
+        if (error && error.code !== '23505') throw error;
+        const comment = comments.find(c => c.id === commentId);
+        if (comment && comment.user_id !== user.id) {
+          await supabase.from('notifications').insert({
+            user_id: comment.user_id,
+            type: 'review_comment_like',
+            actor_id: user.id,
+            reference_id: review.id,
+            reference_type: 'review',
+            message: 'liked your reply',
+            seen: false,
+          });
+        }
+      }
+      loadComments();
+    } catch (err) {
+      setComments(cs => cs.map(c => c.id === commentId ? { ...c, isLiked: curLiked, like_count: curCount } : c));
+      setCommentError(errorMessage(err, 'Your like could not be saved.'));
     }
   }
 
@@ -911,6 +1119,20 @@ function ReviewCard({ review, currentUserId, isGuest, isLiked, onRequireAuth, on
     if (!commentsLoaded) loadComments();
     setShowComments(s => !s);
   }
+
+  useEffect(() => {
+    if (!showComments) return;
+    const channel = supabase
+      .channel(`review-comments-${review.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'review_comments', filter: `review_id=eq.${review.id}` }, () => {
+        loadComments();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comment_likes' }, () => {
+        loadComments();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [showComments, review.id, user]);
 
   return (
     <div style={{ background: '#111', borderRadius: 16, padding: '16px 18px', border: `1px solid ${review.pinned ? 'rgba(245,158,11,.3)' : '#1a1a1a'}` }}>

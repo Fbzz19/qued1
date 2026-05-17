@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Bell, X, Check, User, Heart, MessageSquare, Trophy, UserPlus } from 'lucide-react';
+import { Bell, X, User, Heart, MessageSquare, Trophy, UserPlus, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import type { Notification } from '../lib/supabase';
@@ -18,6 +18,7 @@ function notifIcon(type: string) {
   switch (type) {
     case 'follow': return <User size={14} color="#60a5fa" />;
     case 'review_like': return <Heart size={14} color="#f87171" />;
+    case 'review_comment_like': return <Heart size={14} color="#f87171" />;
     case 'review_comment': return <MessageSquare size={14} color="#34d399" />;
     case 'achievement': return <Trophy size={14} color="#fbbf24" />;
     case 'friend_request': return <UserPlus size={14} color="#f59e0b" />;
@@ -29,6 +30,7 @@ function notifColor(type: string) {
   switch (type) {
     case 'follow': return 'rgba(96,165,250,.12)';
     case 'review_like': return 'rgba(248,113,113,.12)';
+    case 'review_comment_like': return 'rgba(248,113,113,.12)';
     case 'review_comment': return 'rgba(52,211,153,.12)';
     case 'achievement': return 'rgba(251,191,36,.12)';
     case 'friend_request': return 'rgba(245,158,11,.12)';
@@ -62,8 +64,18 @@ export function useNotificationCount() {
 
   useEffect(() => {
     fetchCount();
+    if (!user) return;
+    const channel = supabase
+      .channel(`notification-count-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
+        fetchCount();
+      })
+      .subscribe();
     const interval = setInterval(fetchCount, 30000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [fetchCount]);
 
   return { count, refresh: fetchCount };
@@ -75,7 +87,9 @@ export default function NotificationPanel({ onNavigate }: NotificationPanelProps
   const [notifs, setNotifs] = useState<NotifWithActor[]>([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [liveToast, setLiveToast] = useState<NotifWithActor | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const toastTimerRef = useRef<number | null>(null);
 
   const fetchNotifs = useCallback(async () => {
     if (!user) return;
@@ -134,6 +148,46 @@ export default function NotificationPanel({ onNavigate }: NotificationPanelProps
     if (open) fetchNotifs();
   }, [open, fetchNotifs]);
 
+  // Live notification updates
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`notifications-live-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, async (payload) => {
+        if (payload.eventType === 'INSERT') {
+          const incoming = payload.new as Notification;
+          if (!incoming.seen) setUnread(u => u + 1);
+
+          let actor: { username: string; avatar_url: string } | null = null;
+          if (incoming.actor_id) {
+            const { data } = await supabase
+              .from('profiles')
+              .select('username, avatar_url')
+              .eq('id', incoming.actor_id)
+              .maybeSingle();
+            actor = data;
+          }
+
+          setLiveToast({
+            ...incoming,
+            actor_username: actor?.username,
+            actor_avatar: actor?.avatar_url,
+          });
+
+          if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+          toastTimerRef.current = window.setTimeout(() => setLiveToast(null), 3500);
+        }
+
+        fetchNotifs();
+      })
+      .subscribe();
+
+    return () => {
+      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchNotifs]);
+
   // Close on outside click
   useEffect(() => {
     function handle(e: MouseEvent) {
@@ -143,21 +197,28 @@ export default function NotificationPanel({ onNavigate }: NotificationPanelProps
     return () => document.removeEventListener('mousedown', handle);
   }, [open]);
 
-  async function markAllRead() {
-    if (!user) return;
-    await supabase
-      .from('notifications')
-      .update({ seen: true })
-      .eq('user_id', user.id)
-      .eq('seen', false);
-    setNotifs(ns => ns.map(n => ({ ...n, seen: true })));
-    setUnread(0);
-  }
-
   async function markRead(id: string) {
     await supabase.from('notifications').update({ seen: true }).eq('id', id);
     setNotifs(ns => ns.map(n => n.id === id ? { ...n, seen: true } : n));
     setUnread(u => Math.max(0, u - 1));
+  }
+
+  async function clearAllNotifications() {
+    if (!user || notifs.length === 0) return;
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('user_id', user.id);
+    if (error) return;
+    setNotifs([]);
+    setUnread(0);
+  }
+
+  async function clearNotification(n: NotifWithActor) {
+    const { error } = await supabase.from('notifications').delete().eq('id', n.id);
+    if (error) return;
+    setNotifs(ns => ns.filter(x => x.id !== n.id));
+    if (!n.seen) setUnread(u => Math.max(0, u - 1));
   }
 
   async function respondToRequest(n: NotifWithActor, accept: boolean) {
@@ -229,6 +290,45 @@ export default function NotificationPanel({ onNavigate }: NotificationPanelProps
         )}
       </button>
 
+      {liveToast && !open && (
+        <button
+          className="animate-slide-down"
+          onClick={() => {
+            setOpen(true);
+            setLiveToast(null);
+          }}
+          style={{
+            position: 'absolute',
+            top: 42,
+            right: 0,
+            width: 300,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 10,
+            padding: '12px 14px',
+            borderRadius: 12,
+            border: '1px solid rgba(245,158,11,.25)',
+            background: '#111',
+            boxShadow: '0 16px 50px rgba(0,0,0,.75)',
+            cursor: 'pointer',
+            zIndex: 320,
+            fontFamily: 'inherit',
+            textAlign: 'left',
+          }}
+        >
+          <div style={{ width: 28, height: 28, borderRadius: '50%', background: notifColor(liveToast.type), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            {notifIcon(liveToast.type)}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ margin: '0 0 2px', color: '#e5e5e5', fontSize: 13, lineHeight: 1.35 }}>
+              {liveToast.actor_username && <strong style={{ color: '#fff' }}>{liveToast.actor_username} </strong>}
+              {liveToast.message ?? 'New notification'}
+            </p>
+            <p style={{ margin: 0, color: '#555', fontSize: 11 }}>just now</p>
+          </div>
+        </button>
+      )}
+
       {open && (
         <div
           className="animate-slide-down"
@@ -252,15 +352,15 @@ export default function NotificationPanel({ onNavigate }: NotificationPanelProps
               )}
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
-              {unread > 0 && (
+              {notifs.length > 0 && (
                 <button
-                  onClick={markAllRead}
-                  title="Mark all read"
+                  onClick={clearAllNotifications}
+                  title="Clear all"
                   style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: '#888', fontSize: 11, fontWeight: 500, padding: '4px 8px', borderRadius: 6, transition: 'color .2s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#f59e0b'; }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#f87171'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#888'; }}
                 >
-                  <Check size={11} /> Mark all read
+                  <Trash2 size={11} /> Clear all
                 </button>
               )}
               <button
@@ -338,6 +438,39 @@ export default function NotificationPanel({ onNavigate }: NotificationPanelProps
                 {!n.seen && n.type !== 'friend_request' && (
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b', flexShrink: 0, marginTop: 5 }} />
                 )}
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    clearNotification(n);
+                  }}
+                  title="Clear notification"
+                  aria-label="Clear notification"
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 7,
+                    border: 'none',
+                    background: 'none',
+                    color: '#555',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    marginTop: 1,
+                    transition: 'background .15s, color .15s',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = 'rgba(239,68,68,.1)';
+                    e.currentTarget.style.color = '#f87171';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'none';
+                    e.currentTarget.style.color = '#555';
+                  }}
+                >
+                  <X size={13} />
+                </button>
               </div>
             ))}
           </div>

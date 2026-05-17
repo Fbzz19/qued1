@@ -1,12 +1,7 @@
-import { useState } from 'react';
-import { ArrowLeft, Crown, ChartBar as BarChart2, Palette, Star, Zap, Shield, Check, Sparkles, Lock, ListVideo, Mail } from 'lucide-react';
+import { useState, type CSSProperties } from 'react';
+import { Crown, ChartBar as BarChart2, Palette, Star, Zap, Check, Sparkles, Lock, ListVideo, Mail } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-
-interface ProPageProps {
-  onBack: () => void;
-  onUpgrade: () => void;
-}
 
 const PRO_FEATURES = [
   {
@@ -35,11 +30,6 @@ const PRO_FEATURES = [
     description: 'Be first to try everything new before it rolls out to all users.',
   },
   {
-    icon: <Shield size={22} color="#f59e0b" />,
-    title: 'Ad-Free Experience',
-    description: 'Browse Qued completely ad-free, everywhere on the platform.',
-  },
-  {
     icon: <Star size={22} color="#f59e0b" />,
     title: 'Priority Support',
     description: 'Jump the queue with dedicated support from the Qued team.',
@@ -51,13 +41,41 @@ const PRO_FEATURES = [
   },
 ];
 
-export default function ProPage({ onBack }: ProPageProps) {
+type ProFeature = typeof PRO_FEATURES[number];
+
+function ProFeatureCard({ feat, style }: { feat: ProFeature; style?: CSSProperties }) {
+  return (
+    <div style={{
+      display: 'flex', gap: 14, padding: '18px 20px',
+      background: 'rgba(255,255,255,.025)',
+      border: '1px solid rgba(255,255,255,.06)',
+      borderRadius: 14,
+      transition: 'border-color .2s, background .2s',
+      ...style,
+    }}
+      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(245,158,11,.2)'; (e.currentTarget as HTMLDivElement).style.background = 'rgba(245,158,11,.04)'; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,.06)'; (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,.025)'; }}
+    >
+      <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {feat.icon}
+      </div>
+      <div>
+        <p style={{ margin: '0 0 4px', color: '#fff', fontSize: 14, fontWeight: 600 }}>{feat.title}</p>
+        <p style={{ margin: 0, color: '#555', fontSize: 12, lineHeight: 1.55 }}>{feat.description}</p>
+      </div>
+    </div>
+  );
+}
+
+export default function ProPage() {
   const { profile } = useAuth();
   const isPro = profile?.role === 'pro' || profile?.role === 'admin';
   const [email,     setEmail]     = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState('');
+  const mainFeatures = PRO_FEATURES.filter(feat => feat.title !== 'Pro Badge');
+  const proBadgeFeature = PRO_FEATURES.find(feat => feat.title === 'Pro Badge');
 
   async function handleNotify(e: React.FormEvent) {
     e.preventDefault();
@@ -82,17 +100,8 @@ export default function ProPage({ onBack }: ProPageProps) {
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* Back nav */}
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px clamp(20px,4vw,48px) 0' }}>
-          <button onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#666', fontSize: 14, fontFamily: 'inherit', padding: 0, transition: 'color .2s' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-            onMouseLeave={e => (e.currentTarget.style.color = '#666')}>
-            <ArrowLeft size={16} /> Back
-          </button>
-        </div>
-
         {/* Hero */}
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px clamp(20px,4vw,48px) 56px', textAlign: 'center' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: '64px clamp(20px,4vw,48px) 56px', textAlign: 'center' }}>
           {/* Coming Soon badge */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.3)', borderRadius: 100, padding: '6px 18px' }}>
@@ -175,65 +184,15 @@ export default function ProPage({ onBack }: ProPageProps) {
             <div style={{ background: '#080808', borderRadius: 23, padding: 'clamp(24px,4vw,40px)' }}>
               <h2 style={{ margin: '0 0 28px', color: '#fff', fontSize: 17, fontWeight: 700, textAlign: 'center' }}>What's included in Pro</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
-                {PRO_FEATURES.map(feat => (
-                  <div key={feat.title} style={{
-                    display: 'flex', gap: 14, padding: '18px 20px',
-                    background: 'rgba(255,255,255,.025)',
-                    border: '1px solid rgba(255,255,255,.06)',
-                    borderRadius: 14,
-                    transition: 'border-color .2s, background .2s',
-                  }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(245,158,11,.2)'; (e.currentTarget as HTMLDivElement).style.background = 'rgba(245,158,11,.04)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(255,255,255,.06)'; (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,.025)'; }}
-                  >
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      {feat.icon}
-                    </div>
-                    <div>
-                      <p style={{ margin: '0 0 4px', color: '#fff', fontSize: 14, fontWeight: 600 }}>{feat.title}</p>
-                      <p style={{ margin: 0, color: '#555', fontSize: 12, lineHeight: 1.55 }}>{feat.description}</p>
-                    </div>
-                  </div>
+                {mainFeatures.map(feat => (
+                  <ProFeatureCard key={feat.title} feat={feat} />
                 ))}
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Comparison row */}
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 clamp(20px,4vw,48px) 56px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            {/* Free tier */}
-            <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 20, padding: '28px 24px' }}>
-              <p style={{ margin: '0 0 4px', color: '#888', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Free</p>
-              <p style={{ margin: '0 0 20px', color: '#fff', fontSize: 22, fontWeight: 800 }}>£0 / month</p>
-              {['Track films & TV', 'Rate & review', '3 AI searches/day', 'Basic watchlist', 'Follow friends'].map(f => (
-                <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <Check size={14} color="#4ade80" />
-                  <span style={{ color: '#888', fontSize: 13 }}>{f}</span>
+              {proBadgeFeature && (
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
+                  <ProFeatureCard feat={proBadgeFeature} style={{ width: '100%', maxWidth: 360 }} />
                 </div>
-              ))}
-            </div>
-
-            {/* Pro tier */}
-            <div style={{
-              position: 'relative',
-              borderRadius: 20,
-              padding: 1,
-              background: 'linear-gradient(135deg, rgba(245,158,11,.5) 0%, rgba(245,158,11,.1) 50%, rgba(245,158,11,.4) 100%)',
-            }}>
-              <div style={{ background: '#0d0d0d', borderRadius: 19, padding: '28px 24px', height: '100%', boxSizing: 'border-box' }}>
-                <p style={{ margin: '0 0 4px', color: '#f59e0b', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Pro</p>
-                <p style={{ margin: '0 0 20px', color: '#fff', fontSize: 22, fontWeight: 800 }}>
-                  £3.99 <span style={{ fontSize: 14, fontWeight: 400, color: '#555' }}>/ month</span>
-                </p>
-                {['Everything in Free', 'Unlimited AI searches', 'Advanced stats', 'Unlimited custom lists', 'Profile customisation', 'Pro badge', 'Early access', 'Ad-free'].map(f => (
-                  <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                    <Check size={14} color="#f59e0b" />
-                    <span style={{ color: '#ccc', fontSize: 13 }}>{f}</span>
-                  </div>
-                ))}
-              </div>
+              )}
             </div>
           </div>
         </div>

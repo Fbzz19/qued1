@@ -1,7 +1,7 @@
 const TMDB_API_KEY = '561cfec28927b6575f26079bed25fadf';
 const BASE_URL = 'https://api.themoviedb.org/3';
 
-export const posterUrl   = (path: string | null, size = 'w342') =>
+export const posterUrl   = (path: string | null, size = 'w185') =>
   path ? `https://image.tmdb.org/t/p/${size}${path}` : null;
 export const backdropUrl = (path: string | null, size = 'w1280') =>
   path ? `https://image.tmdb.org/t/p/${size}${path}` : null;

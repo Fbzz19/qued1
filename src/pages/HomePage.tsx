@@ -32,6 +32,8 @@ function dedupe(items: TMDBMedia[]): TMDBMedia[] {
   });
 }
 
+type HomeSectionKey = 'trendFilms' | 'trendTV' | 'topMovies' | 'anticipated';
+
 export default function HomePage({ onMediaClick, onSignUp, onFilmsClick, onSearchClick, onMembersClick, onMemberProfileClick }: HomePageProps) {
   const { user } = useAuth();
   const { t } = useI18n();
@@ -58,43 +60,37 @@ export default function HomePage({ onMediaClick, onSignUp, onFilmsClick, onSearc
   const [popularThisWeek, setPopularThisWeek] = useState<{ tmdb_id: number; media_type: string; title: string; poster_path: string; count: number }[]>([]);
   const [userCount,       setUserCount]       = useState<number | null>(null);
   const [loading,         setLoading]         = useState(true);
+  const [loadedMoreSections, setLoadedMoreSections] = useState<Partial<Record<HomeSectionKey, boolean>>>({});
+  const [loadingMoreSections, setLoadingMoreSections] = useState<Partial<Record<HomeSectionKey, boolean>>>({});
 
   useEffect(() => {
     Promise.all([
       tmdb.trendingMovies('1'),
-      tmdb.trendingMovies('2'),
-      tmdb.trendingMovies('3'),
       tmdb.trendingTV('1'),
-      tmdb.trendingTV('2'),
-      tmdb.trendingTV('3'),
       tmdb.topRated('movie', '1'),
-      tmdb.topRated('movie', '2'),
-      tmdb.topRated('movie', '3'),
       tmdb.upcomingMovies('1'),
-      tmdb.upcomingMovies('2'),
-      tmdb.upcomingMovies('3'),
-    ]).then(([mP1, mP2, mP3, tvP1, tvP2, tvP3, trP1, trP2, trP3, upP1, upP2, upP3]) => {
+    ]).then(([mP1, tvP1, trP1, upP1]) => {
       const films = dedupe(
-        [...mP1.results, ...mP2.results, ...mP3.results]
+        mP1.results
           .map(i => ({ ...i, media_type: 'movie' as const }))
-      ).slice(0, 50);
+      ).slice(0, 20);
 
       const tv = dedupe(
-        [...tvP1.results, ...tvP2.results, ...tvP3.results]
+        tvP1.results
           .map(i => ({ ...i, media_type: 'tv' as const }))
-      ).slice(0, 50);
+      ).slice(0, 20);
 
       const top = dedupe(
-        [...trP1.results, ...trP2.results, ...trP3.results]
+        trP1.results
           .map(i => ({ ...i, media_type: 'movie' as const }))
-      ).slice(0, 50);
+      ).slice(0, 20);
 
       const today = new Date().toISOString().slice(0, 10);
       const upcoming = dedupe(
-        [...upP1.results, ...upP2.results, ...upP3.results]
+        upP1.results
           .filter(i => (i.release_date ?? '') > today)
           .map(i => ({ ...i, media_type: 'movie' as const }))
-      ).slice(0, 50);
+      ).slice(0, 20);
 
       setTrendFilms(films);
       setTrendTV(tv);
@@ -159,6 +155,57 @@ export default function HomePage({ onMediaClick, onSignUp, onFilmsClick, onSearc
     supabase.from('profiles').select('id', { count: 'exact', head: true })
       .then(({ count }) => { if (count != null) setUserCount(count); });
   }, []);
+
+  async function loadMoreSection(section: HomeSectionKey) {
+    if (loadedMoreSections[section] || loadingMoreSections[section]) return;
+
+    setLoadingMoreSections(prev => ({ ...prev, [section]: true }));
+    try {
+      if (section === 'trendFilms') {
+        const [p2, p3] = await Promise.all([tmdb.trendingMovies('2'), tmdb.trendingMovies('3')]);
+        setTrendFilms(current => dedupe([
+          ...current,
+          ...p2.results.map(i => ({ ...i, media_type: 'movie' as const })),
+          ...p3.results.map(i => ({ ...i, media_type: 'movie' as const })),
+        ]).slice(0, 50));
+      }
+
+      if (section === 'trendTV') {
+        const [p2, p3] = await Promise.all([tmdb.trendingTV('2'), tmdb.trendingTV('3')]);
+        setTrendTV(current => dedupe([
+          ...current,
+          ...p2.results.map(i => ({ ...i, media_type: 'tv' as const })),
+          ...p3.results.map(i => ({ ...i, media_type: 'tv' as const })),
+        ]).slice(0, 50));
+      }
+
+      if (section === 'topMovies') {
+        const [p2, p3] = await Promise.all([tmdb.topRated('movie', '2'), tmdb.topRated('movie', '3')]);
+        setTopMovies(current => dedupe([
+          ...current,
+          ...p2.results.map(i => ({ ...i, media_type: 'movie' as const })),
+          ...p3.results.map(i => ({ ...i, media_type: 'movie' as const })),
+        ]).slice(0, 50));
+      }
+
+      if (section === 'anticipated') {
+        const today = new Date().toISOString().slice(0, 10);
+        const [p2, p3] = await Promise.all([tmdb.upcomingMovies('2'), tmdb.upcomingMovies('3')]);
+        setAnticipated(current => dedupe([
+          ...current,
+          ...p2.results,
+          ...p3.results,
+        ].filter(i => (i.release_date ?? '') > today)
+          .map(i => ({ ...i, media_type: 'movie' as const }))).slice(0, 50));
+      }
+
+      setLoadedMoreSections(prev => ({ ...prev, [section]: true }));
+    } catch {
+      // Keep the current row usable if TMDB is slow or unavailable.
+    } finally {
+      setLoadingMoreSections(prev => ({ ...prev, [section]: false }));
+    }
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#000', paddingBottom: 96 }} className="animate-fade-in">
@@ -265,6 +312,8 @@ export default function HomePage({ onMediaClick, onSignUp, onFilmsClick, onSearc
           showRanks
           viewMoreLabel={t('btn_view_more')}
           showLessLabel={t('btn_show_less')}
+          onExpand={() => loadMoreSection('trendFilms')}
+          loadingMore={!!loadingMoreSections.trendFilms}
         />
 
         <div style={{ marginTop: 48 }}>
@@ -278,6 +327,8 @@ export default function HomePage({ onMediaClick, onSignUp, onFilmsClick, onSearc
             showRanks
             viewMoreLabel={t('btn_view_more')}
             showLessLabel={t('btn_show_less')}
+            onExpand={() => loadMoreSection('trendTV')}
+            loadingMore={!!loadingMoreSections.trendTV}
           />
         </div>
 
@@ -292,6 +343,8 @@ export default function HomePage({ onMediaClick, onSignUp, onFilmsClick, onSearc
             showRanks
             viewMoreLabel={t('btn_view_more')}
             showLessLabel={t('btn_show_less')}
+            onExpand={() => loadMoreSection('topMovies')}
+            loadingMore={!!loadingMoreSections.topMovies}
           />
         </div>
 
@@ -306,6 +359,8 @@ export default function HomePage({ onMediaClick, onSignUp, onFilmsClick, onSearc
             showRanks
             viewMoreLabel={t('btn_view_more')}
             showLessLabel={t('btn_show_less')}
+            onExpand={() => loadMoreSection('anticipated')}
+            loadingMore={!!loadingMoreSections.anticipated}
           />
         </div>
 
@@ -444,7 +499,7 @@ function HeroBanner({ item, isLoggedIn, onSignUp, userCount }: {
   onSignUp?: () => void;
   userCount: number | null;
 }) {
-  const backdrop = item?.backdrop_path ? backdropUrl(item.backdrop_path, 'original') : null;
+  const backdrop = item?.backdrop_path ? backdropUrl(item.backdrop_path) : null;
   function scrollToTrending() {
     document.getElementById('trending')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -452,7 +507,7 @@ function HeroBanner({ item, isLoggedIn, onSignUp, userCount }: {
   return (
     <div style={{ position: 'relative', minHeight: 'clamp(520px, 72vh, 700px)', overflow: 'hidden', display: 'flex', alignItems: 'flex-end' }}>
       {backdrop
-        ? <img src={backdrop} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} loading="eager" />
+        ? <img src={backdrop} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} loading="eager" decoding="async" />
         : <div style={{ position: 'absolute', inset: 0, background: '#0a0a0a' }} />}
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #000 0%, rgba(0,0,0,.85) 35%, rgba(0,0,0,.3) 70%, rgba(0,0,0,.15) 100%)' }} />
       <div style={{ position: 'relative', width: '100%', padding: 'clamp(32px,5vw,72px) clamp(20px,4vw,72px) clamp(48px,6vw,80px)', maxWidth: 1400, margin: '0 auto' }}>
@@ -504,7 +559,7 @@ function HeroBanner({ item, isLoggedIn, onSignUp, userCount }: {
   );
 }
 
-function PosterSection({ title, icon, items, loading, onMediaClick, showRanks, mediaTypeOverride, viewMoreLabel = 'View More', showLessLabel = 'Show Less' }: {
+function PosterSection({ title, icon, items, loading, onMediaClick, showRanks, mediaTypeOverride, viewMoreLabel = 'View More', showLessLabel = 'Show Less', onExpand, loadingMore = false }: {
   title: string;
   icon?: React.ReactNode;
   items: TMDBMedia[];
@@ -514,6 +569,8 @@ function PosterSection({ title, icon, items, loading, onMediaClick, showRanks, m
   mediaTypeOverride?: 'movie' | 'tv';
   viewMoreLabel?: string;
   showLessLabel?: string;
+  onExpand?: () => void;
+  loadingMore?: boolean;
 }) {
   const scrollRef    = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -530,6 +587,8 @@ function PosterSection({ title, icon, items, loading, onMediaClick, showRanks, m
         const rect = el.getBoundingClientRect();
         if (rect.top < 64) el.scrollIntoView({ block: 'start' });
       }
+    } else {
+      onExpand?.();
     }
     setShowAll(a => !a);
   }
@@ -551,7 +610,7 @@ function PosterSection({ title, icon, items, loading, onMediaClick, showRanks, m
           onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#f59e0b'; (e.currentTarget as HTMLButtonElement).style.color = '#fbbf24'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#2e2e2e'; (e.currentTarget as HTMLButtonElement).style.color = '#888'; }}
         >
-          {showAll ? showLessLabel : viewMoreLabel}
+          {loadingMore ? 'Loading...' : showAll ? showLessLabel : viewMoreLabel}
         </button>
       </div>
 
@@ -571,6 +630,9 @@ function PosterSection({ title, icon, items, loading, onMediaClick, showRanks, m
                 <PosterThumb key={item.id} item={item} idx={idx} onMediaClick={onMediaClick} showRank={showRanks} mediaTypeOverride={mediaTypeOverride} />
               ))
           }
+          {!loading && loadingMore && Array.from({ length: 8 }).map((_, i) => (
+            <div key={`loading-more-${i}`} className="shimmer" style={{ aspectRatio: '2/3', borderRadius: 8 }} />
+          ))}
         </div>
       ) : (
         <div style={{ position: 'relative' }}>
@@ -622,7 +684,7 @@ function PosterThumb({ item, idx, onMediaClick, showRank, mediaTypeOverride }: {
   return (
     <div className="poster-card" style={{ aspectRatio: '2/3', width: '100%' }} onClick={() => onMediaClick(item.id, type)}>
       {url
-        ? <img src={url} alt={item.title || item.name || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading={idx < 10 ? 'eager' : 'lazy'} />
+        ? <img src={url} alt={item.title || item.name || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading={idx < 4 ? 'eager' : 'lazy'} decoding="async" />
         : <div style={{ width: '100%', height: '100%', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Film size={20} color="#555" /></div>}
       {showRank && (
         <div style={{ position: 'absolute', top: 5, left: 5 }}>

@@ -137,7 +137,7 @@ export function PosterCard({ item, mediaType, onClick }: { item: TMDBMedia; medi
     <div onClick={() => onClick(item.id, type)} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div className="poster-card" style={{ aspectRatio: '2/3', borderRadius: 10 }}>
         {url
-          ? <img src={url} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+          ? <img src={url} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" decoding="async" />
           : <div style={{ width: '100%', height: '100%', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Film size={24} color="#555" /></div>}
       </div>
       <div>

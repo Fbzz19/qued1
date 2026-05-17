@@ -137,7 +137,7 @@ function PosterThumb({ media_type, title, poster_path, onClick }: {
     <div onClick={onClick} style={{ flexShrink: 0, width: 'clamp(80px,10vw,118px)', cursor: 'pointer' }}>
       <div className="poster-card" style={{ aspectRatio: '2/3', width: '100%' }}>
         {url
-          ? <img src={url} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+          ? <img src={url} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" decoding="async" />
           : <div style={{ width: '100%', height: '100%', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {media_type === 'tv' ? <Tv size={18} color="#555" /> : <Film size={18} color="#555" />}
             </div>}
@@ -272,9 +272,9 @@ export default function LoggedInHomePage({ onMediaClick, onMembersClick, onFilms
 
     if (heroBackground) {
       if (heroBackground.backdrop_path) {
-        setHeroBackdrop(backdropUrl(heroBackground.backdrop_path, 'original'));
+        setHeroBackdrop(backdropUrl(heroBackground.backdrop_path, 'w1280'));
       } else if (heroBackground.poster_path) {
-        setHeroBackdrop(posterUrl(heroBackground.poster_path, 'original'));
+        setHeroBackdrop(posterUrl(heroBackground.poster_path, 'w500'));
       }
     } else {
       const lastWatched = allWatched[0];
@@ -283,7 +283,7 @@ export default function LoggedInHomePage({ onMediaClick, onMembersClick, onFilms
           const detail = lastWatched.media_type === 'tv'
             ? await tmdb.tvDetails(lastWatched.tmdb_id)
             : await tmdb.movieDetails(lastWatched.tmdb_id);
-          if (detail.backdrop_path) setHeroBackdrop(backdropUrl(detail.backdrop_path, 'original'));
+          if (detail.backdrop_path) setHeroBackdrop(backdropUrl(detail.backdrop_path, 'w1280'));
         } catch { /* fallback */ }
       }
     }
@@ -548,7 +548,7 @@ export default function LoggedInHomePage({ onMediaClick, onMembersClick, onFilms
       <div style={{ position: 'relative', minHeight: 'clamp(300px,45vh,460px)', overflow: 'hidden', display: 'flex', alignItems: 'flex-end' }}>
         {/* Custom backdrop */}
         {heroBackdrop
-          ? <img src={heroBackdrop} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.86) saturate(1.08)', transform: 'scale(1.01)' }} />
+          ? <img src={heroBackdrop} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.86) saturate(1.08)', transform: 'scale(1.01)' }} decoding="async" />
           : <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0a0a0a 0%, #111 100%)' }} />}
         {/* Gradient overlay */}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #000 0%, rgba(0,0,0,.34) 46%, rgba(0,0,0,.08) 100%)' }} />
@@ -609,7 +609,7 @@ export default function LoggedInHomePage({ onMediaClick, onMembersClick, onFilms
                     onClick={() => onMediaClick(item.tmdb_id, item.media_type)}>
                     <div className="poster-card" style={{ aspectRatio: '2/3', width: '100%', position: 'relative', marginBottom: 8 }}>
                       {url
-                        ? <img src={url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                        ? <img src={url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" decoding="async" />
                         : <div style={{ width: '100%', height: '100%', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.media_type === 'tv' ? <Tv size={22} color="#555" /> : <Film size={22} color="#555" />}</div>}
                       {/* X remove button always visible */}
                       <button
@@ -718,7 +718,7 @@ export default function LoggedInHomePage({ onMediaClick, onMembersClick, onFilms
                     <div className="poster-card" style={{ aspectRatio: '2/3', width: '100%', marginBottom: 8, cursor: 'pointer' }}
                       onClick={() => onMediaClick(item.tmdb_id, (item.media_type as 'movie' | 'tv') ?? 'movie')}>
                       {url
-                        ? <img src={url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                        ? <img src={url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" decoding="async" />
                         : <div style={{ width: '100%', height: '100%', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Film size={16} color="#555" /></div>}
                     </div>
                     <button onClick={() => onMemberProfileClick(item.user_id)}

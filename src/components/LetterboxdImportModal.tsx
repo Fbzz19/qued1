@@ -89,6 +89,37 @@ function detectFileKind(header: string[]): FileKind {
 
 interface ParseResult { fileKind: FileKind; rows: ParsedRow[] }
 
+function findHeaderIndex(header: string[], names: string[]): number {
+  return names.reduce((found, name) => found >= 0 ? found : header.indexOf(name), -1);
+}
+
+function parseLetterboxdRating(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const fullStars = (trimmed.match(/★/g) ?? []).length;
+  const hasHalf = trimmed.includes('½') || /(^|\D)1\/2(\D|$)/.test(trimmed);
+  if (fullStars > 0) {
+    return Math.min(5, Math.max(0.5, fullStars + (hasHalf ? 0.5 : 0)));
+  }
+
+  const numberMatch = trimmed.replace(',', '.').match(/\d+(?:\.\d+)?/);
+  if (!numberMatch) return hasHalf ? 0.5 : null;
+
+  let rating = Number(numberMatch[0]);
+  if (!Number.isFinite(rating) || rating <= 0) return null;
+  if (hasHalf && !trimmed.includes('.') && !trimmed.includes(',')) rating += 0.5;
+  if (rating > 5 && rating <= 10) rating = rating / 2;
+
+  rating = Math.round(rating * 2) / 2;
+  return Math.min(5, Math.max(0.5, rating));
+}
+
+function formatImportedRating(value: string): string {
+  const rating = parseLetterboxdRating(value);
+  return rating !== null ? String(rating) : value;
+}
+
 function parseCSVFile(text: string): ParseResult | { error: string } {
   const lines = text.split(/\r?\n/).filter(l => l.trim());
   if (lines.length < 2) return { error: 'File is empty or has no data rows.' };
@@ -102,9 +133,9 @@ function parseCSVFile(text: string): ParseResult | { error: string } {
   const idx = {
     name:        header.indexOf('name'),
     year:        header.indexOf('year'),
-    rating:      header.indexOf('rating'),
+    rating:      findHeaderIndex(header, ['rating', 'rating10', 'rating 10', 'rating/10']),
     review:      header.indexOf('review'),
-    watchedDate: header.indexOf('watched date') >= 0 ? header.indexOf('watched date') : header.indexOf('date'),
+    watchedDate: findHeaderIndex(header, ['watched date', 'date watched', 'date']),
     tags:        header.indexOf('tags'),
   };
 
@@ -185,6 +216,20 @@ async function tmdbSearchManual(query: string): Promise<TmdbResult[]> {
   } catch { return []; }
 }
 
+async function saveImportedRating(
+  userId: string,
+  tmdbId: number,
+  mediaType: 'movie' | 'tv',
+  rating: number | null
+): Promise<string | null> {
+  if (rating === null) return null;
+  const { error } = await supabase.from('ratings').upsert(
+    { user_id: userId, tmdb_id: tmdbId, media_type: mediaType, rating, updated_at: new Date().toISOString() },
+    { onConflict: 'user_id,tmdb_id,media_type' }
+  );
+  return error?.message ?? null;
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 interface Props { onClose: () => void }
@@ -247,6 +292,7 @@ export default function LetterboxdImportModal({ onClose }: Props) {
       const results = await Promise.all(chunk.map(r => tmdbSearchBest(r.name, r.year)));
       chunk.forEach((row, j) => {
         const match = results[j];
+        const hasImportableRating = parseLetterboxdRating(row.rating) !== null;
         const isDup = showDuplicates && match
           ? (fileKind === 'watchlist' ? existingWatchlist.has(match.id) : existingWatched.has(match.id))
           : false;
@@ -254,7 +300,7 @@ export default function LetterboxdImportModal({ onClose }: Props) {
           key: `${i + j}__${row.name}`,
           row,
           fileKind,
-          status: match ? (isDup ? 'duplicate' : 'matched') : 'unmatched',
+          status: match ? (isDup && !hasImportableRating ? 'duplicate' : 'matched') : 'unmatched',
           tmdbId:       match?.id ?? null,
           tmdbTitle:    match?.title ?? '',
           tmdbYear:     match?.year ?? '',
@@ -367,10 +413,7 @@ export default function LetterboxdImportModal({ onClose }: Props) {
           const posterPath = tmdbPoster ?? '';
 
           // Letterboxd uses 0.5–5 half-star scale, no conversion needed
-          const rawRating = row.rating ? parseFloat(row.rating) : null;
-          const rating = rawRating !== null && !isNaN(rawRating)
-            ? Math.min(5, Math.max(0.5, rawRating))
-            : null;
+          const rating = parseLetterboxdRating(row.rating);
           const watchDate = row.watchedDate || new Date().toISOString().split('T')[0];
           const wasExisting = existingWatchedAnySet.has(`${tmdbId}:${tmdbMediaType}`);
           // Skip watched insert if this exact entry (same date) already exists in DB
@@ -412,10 +455,13 @@ export default function LetterboxdImportModal({ onClose }: Props) {
               }
             }
             if (rating !== null) {
-              await supabase.from('ratings').upsert(
-                { user_id: user.id, tmdb_id: tmdbId, media_type: tmdbMediaType, rating },
-                { onConflict: 'user_id,tmdb_id,media_type' }
-              );
+              const ratingErr = await saveImportedRating(user.id, tmdbId, tmdbMediaType, rating);
+              if (ratingErr) {
+                errors++;
+                errorDetails.push({ title, reason: ratingErr });
+                if (idx >= 0) updatedItems[idx] = { ...updatedItems[idx], importResult: 'error', importError: ratingErr };
+                return;
+              }
             }
             if (wasExisting) updated++; else imported++;
             if (idx >= 0) updatedItems[idx] = { ...updatedItems[idx], importResult: wasExisting ? 'updated' : 'imported' };
@@ -442,22 +488,32 @@ export default function LetterboxdImportModal({ onClose }: Props) {
 
           // Rating (if present)
           if (rating !== null) {
-            await supabase.from('ratings').upsert(
-              { user_id: user.id, tmdb_id: tmdbId, media_type: tmdbMediaType, rating },
-              { onConflict: 'user_id,tmdb_id,media_type' }
-            );
+            const ratingErr = await saveImportedRating(user.id, tmdbId, tmdbMediaType, rating);
+            if (ratingErr) {
+              errors++;
+              errorDetails.push({ title, reason: ratingErr });
+              if (idx >= 0) updatedItems[idx] = { ...updatedItems[idx], importResult: 'error', importError: ratingErr };
+              return;
+            }
           }
 
           // Review (if present)
           if (row.review.trim()) {
-            await supabase.from('reviews').upsert(
+            const { error: reviewErr } = await supabase.from('reviews').upsert(
               {
                 user_id: user.id, tmdb_id: tmdbId, media_type: tmdbMediaType,
                 content: row.review.trim().slice(0, 2000),
                 is_public: true,
+                ...(rating !== null ? { rating } : {}),
               },
               { onConflict: 'user_id,tmdb_id,media_type' }
             );
+            if (reviewErr) {
+              errors++;
+              errorDetails.push({ title, reason: reviewErr.message });
+              if (idx >= 0) updatedItems[idx] = { ...updatedItems[idx], importResult: 'error', importError: reviewErr.message };
+              return;
+            }
           }
 
           if (wasExisting) updated++; else imported++;
@@ -802,7 +858,7 @@ function PreviewRow({ item, expanded, onToggle, onOpenSearch, onSearchQueryChang
               <span style={{ color: '#3a3a3a', fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 120 }}>{item.row.name}</span>
             )}
             <span style={{ color: '#444', fontSize: 11 }}>{displayYear}</span>
-            {item.row.rating && <span style={{ color: '#fbbf24', fontSize: 11 }}>★ {item.row.rating}</span>}
+            {item.row.rating && <span style={{ color: '#fbbf24', fontSize: 11 }}>★ {formatImportedRating(item.row.rating)}</span>}
           </div>
         </div>
 

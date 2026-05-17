@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Film, Plus, Search, Sparkles, Menu, X, ShieldCheck, Crown } from 'lucide-react';
+import { Film, Plus, Search, Sparkles, Menu, X, ShieldCheck, Crown, User, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useI18n } from '../context/I18nContext';
 import NotificationPanel from './NotificationPanel';
 
@@ -11,6 +11,8 @@ interface TopNavProps {
   onSignIn: () => void;
   onSignUp: () => void;
   onMyProfile: () => void;
+  onSettings: () => void;
+  onSignOut: () => void;
   onQuickAdd: () => void;
   onNotificationNavigate?: (type: string, refId: string | null) => void;
   isLoggedIn: boolean;
@@ -25,11 +27,13 @@ const NAV_H = 56;
 
 export default function TopNav({
   activeTab, onTabChange, onSignIn, onSignUp, onMyProfile, onQuickAdd,
-  onNotificationNavigate, isLoggedIn, username, avatarUrl, isAdmin, onAdmin, onPro,
+  onSettings, onSignOut, onNotificationNavigate, isLoggedIn, username, avatarUrl, isAdmin, onAdmin, onPro,
 }: TopNavProps) {
   const { t } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handle(e: MouseEvent) {
@@ -39,7 +43,21 @@ export default function TopNav({
     return () => document.removeEventListener('mousedown', handle);
   }, [menuOpen]);
 
-  function go(tab: NavTab) { onTabChange(tab); setMenuOpen(false); }
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) setProfileMenuOpen(false);
+    }
+    if (profileMenuOpen) document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [profileMenuOpen]);
+
+  function go(tab: NavTab) { onTabChange(tab); setMenuOpen(false); setProfileMenuOpen(false); }
+
+  function profileAction(action: () => void) {
+    action();
+    setProfileMenuOpen(false);
+    setMenuOpen(false);
+  }
 
   // Tabs in exact display order
   const tabs: { key: NavTab; label: string; icon?: React.ReactNode; authOnly?: boolean; special?: boolean }[] = [
@@ -227,25 +245,59 @@ export default function TopNav({
 
           {/* Profile or Sign in / Sign up */}
           {isLoggedIn ? (
-            <button
-              onClick={onMyProfile}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                background: 'none', border: '1px solid #2e2e2e', borderRadius: 8,
-                padding: '5px 12px 5px 5px', cursor: 'pointer', color: '#ccc',
-                fontSize: 13, fontWeight: 500, transition: 'all .2s',
-                fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#f59e0b'; (e.currentTarget as HTMLButtonElement).style.color = '#fff'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#2e2e2e'; (e.currentTarget as HTMLButtonElement).style.color = '#ccc'; }}
-            >
-              <span style={{ width: 24, height: 24, borderRadius: '50%', overflow: 'hidden', background: '#2e2e2e', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                {avatarUrl
-                  ? <img src={avatarUrl} alt={username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontSize: 11, fontWeight: 700, color: '#fbbf24' }}>{username?.[0]?.toUpperCase() ?? '?'}</span>}
-              </span>
-              {username}
-            </button>
+            <div ref={profileMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
+              <button
+                onClick={() => setProfileMenuOpen(o => !o)}
+                aria-haspopup="menu"
+                aria-expanded={profileMenuOpen}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  background: profileMenuOpen ? 'rgba(245,158,11,.08)' : 'none', border: profileMenuOpen ? '1px solid #f59e0b' : '1px solid #2e2e2e', borderRadius: 8,
+                  padding: '5px 9px 5px 5px', cursor: 'pointer', color: profileMenuOpen ? '#fff' : '#ccc',
+                  fontSize: 13, fontWeight: 500, transition: 'all .2s',
+                  fontFamily: 'inherit', whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#f59e0b'; (e.currentTarget as HTMLButtonElement).style.color = '#fff'; }}
+                onMouseLeave={e => {
+                  if (!profileMenuOpen) {
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = '#2e2e2e';
+                    (e.currentTarget as HTMLButtonElement).style.color = '#ccc';
+                  }
+                }}
+              >
+                <span style={{ width: 24, height: 24, borderRadius: '50%', overflow: 'hidden', background: '#2e2e2e', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {avatarUrl
+                    ? <img src={avatarUrl} alt={username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <span style={{ fontSize: 11, fontWeight: 700, color: '#fbbf24' }}>{username?.[0]?.toUpperCase() ?? '?'}</span>}
+                </span>
+                {username}
+                <ChevronDown size={13} style={{ transform: profileMenuOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform .2s' }} />
+              </button>
+
+              {profileMenuOpen && (
+                <div
+                  role="menu"
+                  className="animate-slide-down"
+                  style={{
+                    position: 'absolute',
+                    top: 42,
+                    right: 0,
+                    width: 190,
+                    background: '#0f0f0f',
+                    border: '1px solid #1f1f1f',
+                    borderRadius: 12,
+                    boxShadow: '0 18px 48px rgba(0,0,0,.75)',
+                    padding: 6,
+                    zIndex: 350,
+                  }}
+                >
+                  <ProfileMenuItem icon={<User size={14} />} label="My Profile" onClick={() => profileAction(onMyProfile)} />
+                  <ProfileMenuItem icon={<Settings size={14} />} label="Settings" onClick={() => profileAction(onSettings)} />
+                  <div style={{ height: 1, background: '#1a1a1a', margin: '6px 4px' }} />
+                  <ProfileMenuItem icon={<LogOut size={14} />} label="Sign out" danger onClick={() => profileAction(onSignOut)} />
+                </div>
+              )}
+            </div>
           ) : (
             <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
               <button onClick={onSignIn} className="btn-ghost" style={{ fontSize: 13, padding: '7px 14px', borderRadius: 8 }}>{t('nav_sign_in')}</button>
@@ -330,15 +382,28 @@ export default function TopNav({
           <div style={{ height: 1, background: '#1a1a1a', margin: '8px 0' }} />
 
           {isLoggedIn ? (
-            <button onClick={() => { onMyProfile(); setMenuOpen(false); }}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '13px 24px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, fontFamily: 'inherit', color: '#ccc', borderLeft: '3px solid transparent', textAlign: 'left' }}>
-              <span style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', background: '#2e2e2e', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                {avatarUrl
-                  ? <img src={avatarUrl} alt={username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontSize: 12, fontWeight: 700, color: '#fbbf24' }}>{username?.[0]?.toUpperCase() ?? '?'}</span>}
-              </span>
-              {username}
-            </button>
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 24px 8px', color: '#777', fontSize: 12, fontWeight: 700 }}>
+                <span style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', background: '#2e2e2e', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {avatarUrl
+                    ? <img src={avatarUrl} alt={username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <span style={{ fontSize: 12, fontWeight: 700, color: '#fbbf24' }}>{username?.[0]?.toUpperCase() ?? '?'}</span>}
+                </span>
+                {username}
+              </div>
+              <button onClick={() => profileAction(onMyProfile)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '13px 24px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, fontFamily: 'inherit', color: '#ccc', borderLeft: '3px solid transparent', textAlign: 'left' }}>
+                <User size={15} /> My Profile
+              </button>
+              <button onClick={() => profileAction(onSettings)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '13px 24px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, fontFamily: 'inherit', color: '#ccc', borderLeft: '3px solid transparent', textAlign: 'left' }}>
+                <Settings size={15} /> Settings
+              </button>
+              <button onClick={() => profileAction(onSignOut)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '13px 24px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, fontFamily: 'inherit', color: '#f87171', borderLeft: '3px solid transparent', textAlign: 'left' }}>
+                <LogOut size={15} /> Sign out
+              </button>
+            </>
           ) : (
             <div style={{ display: 'flex', gap: 10, padding: '8px 24px 0' }}>
               <button onClick={() => { onSignIn(); setMenuOpen(false); }} className="btn-ghost" style={{ flex: 1, fontSize: 14, padding: '10px', borderRadius: 10 }}>{t('nav_sign_in')}</button>
@@ -348,5 +413,42 @@ export default function TopNav({
         </div>
       )}
     </nav>
+  );
+}
+
+function ProfileMenuItem({ icon, label, onClick, danger = false }: { icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean }) {
+  return (
+    <button
+      role="menuitem"
+      onClick={onClick}
+      style={{
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 9,
+        padding: '10px 11px',
+        borderRadius: 8,
+        border: 'none',
+        background: 'none',
+        color: danger ? '#f87171' : '#d4d4d8',
+        cursor: 'pointer',
+        fontSize: 13,
+        fontWeight: 600,
+        fontFamily: 'inherit',
+        textAlign: 'left',
+        transition: 'background .15s, color .15s',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.background = danger ? 'rgba(239,68,68,.1)' : '#181818';
+        e.currentTarget.style.color = danger ? '#fca5a5' : '#fff';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.background = 'none';
+        e.currentTarget.style.color = danger ? '#f87171' : '#d4d4d8';
+      }}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }

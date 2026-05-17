@@ -155,6 +155,7 @@ const FRANCHISES: Record<string, Franchise> = {
       { id: 566525, title: 'Shang-Chi and the Legend of the Ten Rings',          year: 2021, type: 'movie' },
       { id: 88396,  title: 'The Falcon and the Winter Soldier',                  year: 2021, type: 'tv',    posterPath: '/6kbAMLteGO8yyewYau6bJ683sw7.jpg' },
       { id: 429617, title: 'Spider-Man: Far From Home',                          year: 2019, type: 'movie' },
+      { id: 634649, title: 'Spider-Man: No Way Home',                            year: 2021, type: 'movie' },
       { id: 524434, title: 'Eternals',                                           year: 2021, type: 'movie', posterPath: '/lFByFSLV5WDJEv3KabbdAF959F2.jpg' },
       { id: 453395, title: 'Doctor Strange in the Multiverse of Madness',        year: 2022, type: 'movie' },
       { id: 88329,  title: 'Hawkeye',                                            year: 2021, type: 'tv'    },
@@ -171,7 +172,6 @@ const FRANCHISES: Record<string, Franchise> = {
       { id: 447365, title: 'Guardians of the Galaxy Vol. 3',                     year: 2023, type: 'movie' },
       { id: 114472, title: 'Secret Invasion',                                    year: 2023, type: 'tv',    posterPath: '/f5ZMzzCvt2IzVDxr54gHPv9jlC9.jpg' },
       { id: 609681, title: 'The Marvels',                                        year: 2023, type: 'movie' },
-      { id: 634649, title: 'Spider-Man: No Way Home',                            year: 2021, type: 'movie' },
       { id: 533535, title: 'Deadpool & Wolverine',                               year: 2024, type: 'movie' },
       { id: 138501, title: 'Agatha All Along',                                   year: 2024, type: 'tv',    posterPath: '/mGsxKwXUjojitRv2E9qMTbxbBRd.jpg' },
       { id: 202555, title: 'Daredevil: Born Again',                              year: 2025, type: 'tv',    posterPath: '/xDUoAsU8lQHOOoRkFiBuarmACDN.jpg' },
@@ -204,11 +204,12 @@ const FRANCHISES: Record<string, Franchise> = {
       { id: 79093,  title: 'Star Wars Resistance',                year: 2018, type: 'tv',    posterPath: '/xul6SG8rar3wkHPY8YusUtxcdlZ.jpg' },
       { id: 82856,  title: 'The Mandalorian',                     year: 2019, type: 'tv',    posterPath: '/sWgBv7LV2PRoQgkxwlibdGXKz1S.jpg' },
       { id: 181812, title: 'Star Wars: The Rise of Skywalker',    year: 2019, type: 'movie' },
-      { id: 115036, title: 'The Book of Boba Fett',               year: 2021, type: 'tv',    posterPath: '/gNbdjDi1HamTCrfvM9JeA94bNi2.jpg' },
       { id: 105971, title: 'Star Wars: The Bad Batch',            year: 2021, type: 'tv',    posterPath: '/5mHus672nuinyaE0FtqvD0AddcY.jpg' },
+      { id: 115036, title: 'The Book of Boba Fett',               year: 2021, type: 'tv',    posterPath: '/gNbdjDi1HamTCrfvM9JeA94bNi2.jpg' },
       { id: 92830,  title: 'Obi-Wan Kenobi',                      year: 2022, type: 'tv',    posterPath: '/4Lok3HBSfbQxibQZBygoVCwKKrZ.jpg' },
       { id: 83867,  title: 'Andor',                               year: 2022, type: 'tv',    posterPath: '/khZqmwHQicTYoS7Flreb9EddFZC.jpg' },
       { id: 203085, title: 'Star Wars: Tales of the Jedi',        year: 2022, type: 'tv',    posterPath: '/k3nWQb0E8mLSR8acSkJP78VRVMv.jpg' },
+      { id: 202998, title: 'Star Wars: Young Jedi Adventures',     year: 2023, type: 'tv',    posterPath: '/bC2Mix1WPUiY6pldh77oiFl1MvI.jpg' },
       { id: 114461, title: 'Ahsoka',                              year: 2023, type: 'tv',    posterPath: '/eiJeWeCAEZAmRppnXHiTWDcCd3Q.jpg' },
       { id: 251091, title: 'Star Wars: Tales of the Empire',      year: 2024, type: 'tv',    posterPath: '/qA28nLteurVboSSzltuyYt1lvlC.jpg' },
       { id: 114479, title: 'The Acolyte',                         year: 2024, type: 'tv',    posterPath: '/mztdt3y6GBsJR69zHtszFezTCLT.jpg' },
@@ -217,6 +218,7 @@ const FRANCHISES: Record<string, Franchise> = {
       { id: 289219, title: 'Star Wars: Maul - Shadow Lord',       year: 2026, type: 'tv',    posterPath: '/fTfLd3s9yBNOzbFHD2aXvwEs93H.jpg' },
     ],
     chronological: [
+      { id: 202998, title: 'Star Wars: Young Jedi Adventures',     year: 2023, type: 'tv',    posterPath: '/bC2Mix1WPUiY6pldh77oiFl1MvI.jpg' },
       { id: 114479, title: 'The Acolyte',                         year: 2024, type: 'tv',    posterPath: '/mztdt3y6GBsJR69zHtszFezTCLT.jpg' },
       { id: 1893,   title: 'Star Wars: The Phantom Menace',       year: 1999, type: 'movie' },
       { id: 1894,   title: 'Star Wars: Attack of the Clones',     year: 2002, type: 'movie' },
@@ -321,9 +323,10 @@ const FRANCHISES: Record<string, Franchise> = {
       { id: 331,    title: 'Jurassic Park III',                    year: 2001, type: 'movie' },
       { id: 135397, title: 'Jurassic World',                      year: 2015, type: 'movie' },
       { id: 351286, title: 'Jurassic World: Fallen Kingdom',      year: 2018, type: 'movie' },
+      { id: 630322, title: 'Battle at Big Rock',                  year: 2019, type: 'movie', posterPath: '/llnKykkow6C5viJsTeHfUTMQptI.jpg' },
       { id: 93741,  title: 'Jurassic World Camp Cretaceous',      year: 2020, type: 'tv',    posterPath: '/nkCbCmlwjwT6QL44DqG7qE9ch8H.jpg' },
-      { id: 1036956, title: 'Jurassic World Camp Cretaceous: Hidden Adventure', year: 2022, type: 'movie', posterPath: '/7ZeqXAT3EXu9uhFXwhyKlH4NAlM.jpg' },
       { id: 507086, title: 'Jurassic World Dominion',             year: 2022, type: 'movie' },
+      { id: 1036956, title: 'Jurassic World Camp Cretaceous: Hidden Adventure', year: 2022, type: 'movie', posterPath: '/7ZeqXAT3EXu9uhFXwhyKlH4NAlM.jpg' },
       { id: 237512, title: 'Jurassic World: Chaos Theory',        year: 2024, type: 'tv',    posterPath: '/c2Od0cY2IeayDj5osUxZSAD1QK.jpg' },
       { id: 1234821, title: 'Jurassic World Rebirth',             year: 2025, type: 'movie', posterPath: '/1RICxzeoNCAO5NpcRMIgg1XT6fm.jpg' },
     ],
@@ -335,6 +338,7 @@ const FRANCHISES: Record<string, Franchise> = {
       { id: 93741,  title: 'Jurassic World Camp Cretaceous',      year: 2020, type: 'tv',    posterPath: '/nkCbCmlwjwT6QL44DqG7qE9ch8H.jpg' },
       { id: 1036956, title: 'Jurassic World Camp Cretaceous: Hidden Adventure', year: 2022, type: 'movie', posterPath: '/7ZeqXAT3EXu9uhFXwhyKlH4NAlM.jpg' },
       { id: 351286, title: 'Jurassic World: Fallen Kingdom',      year: 2018, type: 'movie' },
+      { id: 630322, title: 'Battle at Big Rock',                  year: 2019, type: 'movie', posterPath: '/llnKykkow6C5viJsTeHfUTMQptI.jpg' },
       { id: 507086, title: 'Jurassic World Dominion',             year: 2022, type: 'movie' },
       { id: 237512, title: 'Jurassic World: Chaos Theory',        year: 2024, type: 'tv',    posterPath: '/c2Od0cY2IeayDj5osUxZSAD1QK.jpg' },
       { id: 1234821, title: 'Jurassic World Rebirth',             year: 2025, type: 'movie', posterPath: '/1RICxzeoNCAO5NpcRMIgg1XT6fm.jpg' },
@@ -561,6 +565,7 @@ const FRANCHISES: Record<string, Franchise> = {
       { id: 698,    title: 'Moonraker',                           year: 1979, type: 'movie', posterPath: '/6LrJdXNmu5uHOVALZxVYd44Lva0.jpg' },
       { id: 699,    title: 'For Your Eyes Only',                  year: 1981, type: 'movie', posterPath: '/xV4Nnr6DjjERlqNikqDQX8LUgua.jpg' },
       { id: 700,    title: 'Octopussy',                           year: 1983, type: 'movie', posterPath: '/yoosZitM9igSk3Sd0sBXIhKlAh1.jpg' },
+      { id: 36670,  title: 'Never Say Never Again',               year: 1983, type: 'movie', posterPath: '/zhoAL4o1STGgLbLxJ9r1ijfyHC9.jpg' },
       { id: 707,    title: 'A View to a Kill',                    year: 1985, type: 'movie', posterPath: '/arJF829RP9cYvh0NU70dC5TtXSa.jpg' },
       { id: 708,    title: 'The Living Daylights',                year: 1987, type: 'movie' },
       { id: 709,    title: 'Licence to Kill',                     year: 1989, type: 'movie' },
@@ -580,11 +585,74 @@ const FRANCHISES: Record<string, Franchise> = {
 export const FRANCHISE_LIST = Object.values(FRANCHISES).map(f => ({ id: f.id, name: f.name, color: f.color }));
 export const FRANCHISES_DATA = FRANCHISES;
 
+const FRANCHISE_IDENTITY_LOGOS: Record<string, { path: string; width: number; top?: string; right?: string; bottom?: string; left?: string; rotate?: number; opacity?: number }> = {
+  marvel: { path: '/mIkZDuulwMPzESbzF9lg3rD8CcO.png', width: 430, top: '10%', right: '4%', rotate: -7, opacity: 0.082 },
+  star_wars: { path: '/vswPivs3yuUsk5aW6DbnyeNQ4GX.png', width: 360, top: '9%', right: '5%', rotate: 6, opacity: 0.086 },
+  dc: { path: '/2Tc1P3Ac8M479naPp1kYT3izLS5.png', width: 230, top: '10%', right: '8%', rotate: -7, opacity: 0.078 },
+  fast_furious: { path: '/1c8iuk79l4uFA7xq7o2TCsJDFi1.png', width: 390, top: '12%', right: '3%', rotate: -8, opacity: 0.08 },
+  james_bond: { path: '/pxvf5usDNAzPEc9j0yluQA2I2Ud.png', width: 300, top: '11%', right: '6%', rotate: 6, opacity: 0.082 },
+  harry_potter: { path: '/n7Pj4doQ1yfElCiGTGFTvzoQkpf.png', width: 390, top: '10%', right: '3%', rotate: -6, opacity: 0.086 },
+  lotr: { path: '/87sl6r7n7Qx0fALtLZFxM3mU3KM.png', width: 450, top: '13%', right: '2%', rotate: 7, opacity: 0.078 },
+  john_wick: { path: '/eVXvH6j4qM8ZEqZfw5bZ6JGQxqZ.png', width: 390, top: '11%', right: '3%', rotate: 6, opacity: 0.082 },
+  mission_impossible: { path: '/d4Nk4FAlEoHLNEny88SQ7Jk9ZsZ.png', width: 390, top: '12%', right: '3%', rotate: -8, opacity: 0.086 },
+  jurassic_park: { path: '/ec4wy0iZFkHTxw04HyX4r06DwrH.png', width: 310, top: '9%', right: '6%', rotate: 7, opacity: 0.082 },
+  indiana_jones: { path: '/tPI0BNiiGbVAPIrO8kcBWajM6He.png', width: 390, top: '11%', right: '3%', rotate: -7, opacity: 0.082 },
+  alien: { path: '/riI33EA1vYQ1szTtMe0NR7TwV1p.png', width: 430, top: '14%', right: '2%', rotate: 4, opacity: 0.09 },
+  terminator: { path: '/rKa9Nx344BrH7TCwGIArSbf0zqT.png', width: 410, top: '12%', right: '3%', rotate: -7, opacity: 0.086 },
+  transformers: { path: '/ozzvPYVLxYwXgspOrF5CyDP2A8S.png', width: 420, top: '13%', right: '3%', rotate: 6, opacity: 0.086 },
+};
+
+function FranchiseIdentityBackdrop({ franchiseId, color }: { franchiseId: string; color: string }) {
+  const logo = FRANCHISE_IDENTITY_LOGOS[franchiseId];
+  if (!logo) return null;
+
+  return (
+    <div aria-hidden="true" style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+      <img
+        src={posterUrl(logo.path, 'original') ?? undefined}
+        alt=""
+        draggable={false}
+        style={{
+          position: 'absolute',
+          top: logo.top,
+          right: logo.right,
+          bottom: logo.bottom,
+          left: logo.left,
+          width: `clamp(${Math.round(logo.width * 0.55)}px, ${Math.round(logo.width / 11)}vw, ${logo.width}px)`,
+          maxHeight: franchiseId === 'dc' || franchiseId === 'jurassic_park' ? 230 : 135,
+          objectFit: 'contain',
+          opacity: logo.opacity,
+          transform: `rotate(${logo.rotate ?? 0}deg)`,
+          filter: `grayscale(1) brightness(1.62) contrast(1.16) drop-shadow(0 0 30px ${color}44)`,
+          mixBlendMode: 'screen',
+        }}
+      />
+      <img
+        src={posterUrl(logo.path, 'original') ?? undefined}
+        alt=""
+        draggable={false}
+        style={{
+          position: 'absolute',
+          left: '-4%',
+          bottom: '4%',
+          width: `clamp(${Math.round(logo.width * 0.42)}px, ${Math.round(logo.width / 13)}vw, ${Math.round(logo.width * 0.82)}px)`,
+          maxHeight: franchiseId === 'dc' || franchiseId === 'jurassic_park' ? 190 : 112,
+          objectFit: 'contain',
+          opacity: Math.max((logo.opacity ?? 0.08) - 0.03, 0.045),
+          transform: `rotate(${-(logo.rotate ?? 0) - 4}deg)`,
+          filter: `grayscale(1) brightness(1.42) contrast(1.08) drop-shadow(0 0 24px ${color}33)`,
+          mixBlendMode: 'screen',
+        }}
+      />
+    </div>
+  );
+}
+
 // Batch-fetch posters with concurrency control to avoid rate limiting
 async function fetchPostersInBatches(
   entries: FranchiseEntry[],
-  batchSize = 6,
-  delayMs = 100,
+  batchSize = 8,
+  delayMs = 50,
 ): Promise<Record<string, string | null>> {
   const result: Record<string, string | null> = {};
   for (let i = 0; i < entries.length; i += batchSize) {
@@ -608,6 +676,17 @@ async function fetchPostersInBatches(
     }
   }
   return result;
+}
+
+function preloadPosterImages(paths: Array<string | null | undefined>) {
+  const urls = [...new Set(paths.filter(Boolean).map(path => posterUrl(path!, 'w342')).filter(Boolean) as string[])];
+
+  return Promise.all(urls.map(url => new Promise<void>(resolve => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => resolve();
+    img.src = url;
+  })));
 }
 
 function releaseDateFor(entry: FranchiseEntry) {
@@ -719,9 +798,11 @@ function MarvelGlyph({ variant, top, right, bottom, left, size, rotate = 0, opac
     case 'shield':
       art = (
         <>
-          <path d="M50 5 L84 17 C81 51 69 78 50 94 C31 78 19 51 16 17 Z" fill="rgba(196,196,204,.1)" {...line} />
-          <path d="M50 20 L58 40 H79 L62 52 L69 74 L50 61 L31 74 L38 52 L21 40 H42 Z" fill="currentColor" opacity=".76" />
-          <path d="M50 5 V94" {...fineLine} opacity=".26" />
+          <circle cx="50" cy="50" r="43" fill="rgba(196,196,204,.08)" {...line} />
+          <circle cx="50" cy="50" r="33" {...line} opacity=".86" />
+          <circle cx="50" cy="50" r="23" {...fineLine} opacity=".82" />
+          <circle cx="50" cy="50" r="13" fill="rgba(196,196,204,.12)" {...fineLine} />
+          <path d="M50 29 L56 43 H71 L59 52 L64 67 L50 58 L36 67 L41 52 L29 43 H44 Z" fill="currentColor" opacity=".82" />
         </>
       );
       break;
@@ -1082,8 +1163,9 @@ function DCGlyph({ variant, top, right, bottom, left, size, rotate = 0, opacity 
     case 'shield':
       art = (
         <>
-          <path d="M50 5 L84 18 L76 70 L50 94 L24 70 L16 18 Z" fill="rgba(209,213,219,.08)" {...line} />
-          <path d="M35 29 H65 L59 43 H45 L41 54 H61 L50 77 L37 62 H28 Z" fill="currentColor" opacity=".72" />
+          <path d="M50 6 L88 27 L72 78 L50 94 L28 78 L12 27 Z" fill="rgba(209,213,219,.08)" {...line} />
+          <path d="M28 34 H73 L62 47 H47 C42 47 40 51 44 54 L59 61 C68 66 64 80 50 81 H31 L39 67 H53 C58 67 59 63 54 60 L40 54 C31 49 34 38 45 38 H24 Z" fill="currentColor" opacity=".74" />
+          <path d="M50 6 L61 47 M50 94 L39 67" {...fineLine} opacity=".34" />
         </>
       );
       break;
@@ -1369,6 +1451,653 @@ function JohnWickAmbientBackground() {
   );
 }
 
+type ThemedGlyphVariant =
+  | 'footprint'
+  | 'clawMark'
+  | 'amber'
+  | 'dna'
+  | 'bone'
+  | 'fedora'
+  | 'whip'
+  | 'compass'
+  | 'relic'
+  | 'torch'
+  | 'egg'
+  | 'corridor'
+  | 'xeno'
+  | 'planet'
+  | 'warning'
+  | 'skull'
+  | 'circuit'
+  | 'chip'
+  | 'scanner'
+  | 'gear'
+  | 'cube'
+  | 'robotFace'
+  | 'spark'
+  | 'chevrons'
+  | 'fuse'
+  | 'timer'
+  | 'laser'
+  | 'vault'
+  | 'wand'
+  | 'glasses'
+  | 'snitch'
+  | 'tower'
+  | 'starburst'
+  | 'ring'
+  | 'sword'
+  | 'leaf'
+  | 'mountain'
+  | 'gate'
+  | 'wheel'
+  | 'speedometer'
+  | 'nitro'
+  | 'road'
+  | 'gunbarrel'
+  | 'martini'
+  | 'diamondSuit'
+  | 'playingCard';
+
+interface ThemedGlyphPlacement {
+  variant: ThemedGlyphVariant;
+  top?: string;
+  right?: string;
+  bottom?: string;
+  left?: string;
+  size: number;
+  rotate?: number;
+  opacity?: number;
+}
+
+interface ThemedAmbientConfig {
+  accent: string;
+  glow: string;
+  grid: string;
+  dots: string;
+  glyphs: ThemedGlyphPlacement[];
+}
+
+function ThemedFranchiseGlyph({ variant, top, right, bottom, left, size, rotate = 0, opacity = 0.1, color = '#d6d3d1', glow }: ThemedGlyphPlacement & { color?: string; glow: string }) {
+  const base: CSSProperties = {
+    position: 'absolute',
+    width: size,
+    height: size,
+    top,
+    right,
+    bottom,
+    left,
+    opacity,
+    color,
+    transform: `rotate(${rotate}deg)`,
+    filter: `drop-shadow(0 0 22px ${glow})`,
+  };
+  const line = { stroke: 'currentColor', strokeWidth: 3.6, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  const fineLine = { stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  let art;
+
+  switch (variant) {
+    case 'footprint':
+      art = (
+        <>
+          <ellipse cx="48" cy="58" rx="20" ry="27" {...line} />
+          <circle cx="28" cy="28" r="7" {...fineLine} />
+          <circle cx="44" cy="21" r="8" {...fineLine} />
+          <circle cx="62" cy="25" r="7" {...fineLine} />
+          <circle cx="73" cy="39" r="6" {...fineLine} />
+        </>
+      );
+      break;
+    case 'clawMark':
+      art = (
+        <>
+          <path d="M28 16 C16 38 17 62 35 86" {...line} />
+          <path d="M50 10 C38 35 39 65 52 90" {...line} />
+          <path d="M72 18 C59 42 61 64 75 84" {...line} />
+        </>
+      );
+      break;
+    case 'amber':
+      art = (
+        <>
+          <path d="M50 10 L82 38 L68 86 H32 L18 38 Z" {...line} />
+          <circle cx="50" cy="49" r="13" {...fineLine} />
+          <path d="M41 49 H59 M50 40 V58" {...fineLine} />
+        </>
+      );
+      break;
+    case 'dna':
+      art = (
+        <>
+          <path d="M28 14 C70 32 70 68 28 86" {...line} />
+          <path d="M72 14 C30 32 30 68 72 86" {...line} />
+          <path d="M38 28 H62 M32 43 H68 M32 58 H68 M38 74 H62" {...fineLine} />
+        </>
+      );
+      break;
+    case 'bone':
+      art = (
+        <>
+          <path d="M27 38 L73 62" {...line} />
+          <circle cx="21" cy="31" r="9" {...fineLine} />
+          <circle cx="33" cy="30" r="9" {...fineLine} />
+          <circle cx="67" cy="70" r="9" {...fineLine} />
+          <circle cx="79" cy="69" r="9" {...fineLine} />
+        </>
+      );
+      break;
+    case 'fedora':
+      art = (
+        <>
+          <path d="M18 61 C34 67 66 67 82 61" {...line} />
+          <path d="M32 59 L38 32 C48 25 61 25 68 32 L74 59" {...line} />
+          <path d="M35 49 H72" {...fineLine} />
+        </>
+      );
+      break;
+    case 'whip':
+      art = <path d="M19 67 C35 25 68 25 76 48 C85 77 38 85 41 55 C43 36 68 37 66 56" {...line} />;
+      break;
+    case 'compass':
+      art = (
+        <>
+          <circle cx="50" cy="50" r="34" {...line} />
+          <path d="M50 22 L61 55 L50 78 L39 45 Z" {...line} />
+          <path d="M50 14 V22 M50 78 V86 M14 50 H22 M78 50 H86" {...fineLine} />
+        </>
+      );
+      break;
+    case 'relic':
+      art = (
+        <>
+          <path d="M50 12 L78 38 L66 82 H34 L22 38 Z" {...line} />
+          <path d="M38 42 H62 M34 55 H66 M41 68 H59" {...fineLine} />
+        </>
+      );
+      break;
+    case 'torch':
+      art = (
+        <>
+          <path d="M50 12 C68 34 42 35 57 54 C39 46 35 27 50 12 Z" {...line} />
+          <path d="M40 55 H60 L54 88 H46 Z" {...line} />
+        </>
+      );
+      break;
+    case 'egg':
+      art = (
+        <>
+          <path d="M50 12 C70 18 80 43 74 66 C69 86 31 86 26 66 C20 43 30 18 50 12 Z" {...line} />
+          <path d="M38 44 L49 54 L61 42 M37 62 L49 53 L63 66" {...fineLine} />
+        </>
+      );
+      break;
+    case 'corridor':
+      art = (
+        <>
+          <path d="M18 16 H82 L66 84 H34 Z" {...line} />
+          <path d="M34 30 H66 M30 46 H70 M26 64 H74 M50 16 V84" {...fineLine} />
+        </>
+      );
+      break;
+    case 'xeno':
+      art = (
+        <>
+          <path d="M19 47 C27 18 66 12 81 34 C69 32 55 38 48 54 C42 69 32 75 20 76 C28 66 24 55 19 47 Z" {...line} />
+          <path d="M45 57 C55 64 64 64 74 58 M44 71 L50 82 M56 70 L62 84 M68 66 L76 78" {...fineLine} />
+        </>
+      );
+      break;
+    case 'planet':
+      art = (
+        <>
+          <circle cx="50" cy="50" r="26" {...line} />
+          <path d="M16 58 C35 42 68 33 86 40 C67 55 33 68 16 58 Z" {...fineLine} />
+        </>
+      );
+      break;
+    case 'warning':
+      art = (
+        <>
+          <path d="M50 16 L86 80 H14 Z" {...line} />
+          <path d="M50 37 V58 M50 70 V72" {...line} />
+        </>
+      );
+      break;
+    case 'skull':
+      art = (
+        <>
+          <path d="M28 43 C28 22 72 22 72 43 C72 57 65 64 60 70 V82 H40 V70 C35 64 28 57 28 43 Z" {...line} />
+          <circle cx="41" cy="48" r="7" {...fineLine} />
+          <circle cx="59" cy="48" r="7" {...fineLine} />
+          <path d="M45 66 H55 M45 75 V82 M55 75 V82" {...fineLine} />
+        </>
+      );
+      break;
+    case 'circuit':
+      art = (
+        <>
+          <path d="M18 28 H38 V50 H62 V72 H82" {...line} />
+          <path d="M18 72 H38 V62 M62 38 V28 H82 M50 18 V50 M50 82 V62" {...fineLine} />
+          <circle cx="18" cy="28" r="5" {...fineLine} />
+          <circle cx="82" cy="72" r="5" {...fineLine} />
+          <circle cx="50" cy="50" r="7" {...fineLine} />
+        </>
+      );
+      break;
+    case 'chip':
+      art = (
+        <>
+          <rect x="28" y="28" width="44" height="44" rx="7" {...line} />
+          <rect x="40" y="40" width="20" height="20" rx="4" {...fineLine} />
+          <path d="M18 34 H28 M18 50 H28 M18 66 H28 M72 34 H82 M72 50 H82 M72 66 H82 M34 18 V28 M50 18 V28 M66 18 V28 M34 72 V82 M50 72 V82 M66 72 V82" {...fineLine} />
+        </>
+      );
+      break;
+    case 'scanner':
+      art = (
+        <>
+          <path d="M18 28 H82 M18 50 H82 M18 72 H82" {...line} />
+          <path d="M28 18 V38 M57 40 V60 M40 62 V82 M74 62 V82" {...fineLine} />
+        </>
+      );
+      break;
+    case 'gear':
+      art = (
+        <>
+          <circle cx="50" cy="50" r="20" {...line} />
+          <circle cx="50" cy="50" r="8" {...fineLine} />
+          {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
+            <path key={angle} d="M50 14 V26" {...fineLine} transform={`rotate(${angle} 50 50)`} />
+          ))}
+        </>
+      );
+      break;
+    case 'cube':
+      art = (
+        <>
+          <path d="M50 14 L78 30 V66 L50 86 L22 66 V30 Z" {...line} />
+          <path d="M22 30 L50 48 L78 30 M50 48 V86" {...fineLine} />
+        </>
+      );
+      break;
+    case 'robotFace':
+      art = (
+        <>
+          <path d="M24 28 L38 16 H62 L76 28 V70 L61 84 H39 L24 70 Z" {...line} />
+          <path d="M36 42 H47 M53 42 H64 M36 64 H64" {...line} />
+        </>
+      );
+      break;
+    case 'spark':
+      art = <path d="M50 12 L60 40 L88 50 L60 60 L50 88 L40 60 L12 50 L40 40 Z" {...line} />;
+      break;
+    case 'chevrons':
+      art = <path d="M20 24 L50 44 L80 24 M20 46 L50 66 L80 46 M20 68 L50 88 L80 68" {...line} />;
+      break;
+    case 'fuse':
+      art = (
+        <>
+          <path d="M20 72 C35 30 61 78 80 28" {...line} />
+          <path d="M74 20 L86 12 M80 28 H94 M72 32 L82 44" {...fineLine} />
+        </>
+      );
+      break;
+    case 'timer':
+      art = (
+        <>
+          <circle cx="50" cy="54" r="31" {...line} />
+          <path d="M40 16 H60 M50 16 V25 M50 54 L66 41" {...line} />
+        </>
+      );
+      break;
+    case 'laser':
+      art = <path d="M18 30 L82 18 M14 55 L86 40 M24 82 L78 68" {...line} />;
+      break;
+    case 'vault':
+      art = (
+        <>
+          <circle cx="50" cy="50" r="34" {...line} />
+          <circle cx="50" cy="50" r="13" {...fineLine} />
+          <path d="M50 16 V37 M50 63 V84 M16 50 H37 M63 50 H84 M28 28 L42 42 M58 58 L72 72 M72 28 L58 42 M42 58 L28 72" {...fineLine} />
+        </>
+      );
+      break;
+    case 'wand':
+      art = (
+        <>
+          <path d="M20 80 L72 28" {...line} />
+          <path d="M70 16 V30 M63 23 H77 M80 28 L87 21 M80 21 L87 28" {...fineLine} />
+        </>
+      );
+      break;
+    case 'glasses':
+      art = (
+        <>
+          <circle cx="34" cy="54" r="17" {...line} />
+          <circle cx="66" cy="54" r="17" {...line} />
+          <path d="M51 54 H49 M17 50 L10 42 M83 50 L90 42" {...fineLine} />
+        </>
+      );
+      break;
+    case 'snitch':
+      art = (
+        <>
+          <circle cx="50" cy="50" r="10" {...line} />
+          <path d="M40 49 C23 33 17 28 10 31 C19 45 27 55 40 55 M60 49 C77 33 83 28 90 31 C81 45 73 55 60 55" {...line} />
+        </>
+      );
+      break;
+    case 'tower':
+      art = (
+        <>
+          <path d="M34 82 V33 L50 18 L66 33 V82" {...line} />
+          <path d="M28 82 H72 M39 43 H46 M54 43 H61 M43 61 H57 M38 33 H62" {...fineLine} />
+        </>
+      );
+      break;
+    case 'starburst':
+      art = <path d="M50 14 V32 M50 68 V86 M14 50 H32 M68 50 H86 M25 25 L38 38 M62 62 L75 75 M75 25 L62 38 M38 62 L25 75" {...line} />;
+      break;
+    case 'ring':
+      art = (
+        <>
+          <circle cx="50" cy="50" r="30" {...line} />
+          <circle cx="50" cy="50" r="19" {...fineLine} />
+        </>
+      );
+      break;
+    case 'sword':
+      art = (
+        <>
+          <path d="M50 10 L58 62 H42 Z" {...line} />
+          <path d="M31 66 H69 M42 82 H58 M50 66 V88" {...line} />
+        </>
+      );
+      break;
+    case 'leaf':
+      art = (
+        <>
+          <path d="M24 68 C38 24 67 17 82 20 C78 52 55 76 24 68 Z" {...line} />
+          <path d="M24 68 C42 57 56 42 76 24" {...fineLine} />
+        </>
+      );
+      break;
+    case 'mountain':
+      art = (
+        <>
+          <path d="M12 78 L34 38 L46 58 L59 24 L88 78 Z" {...line} />
+          <path d="M34 38 L41 50 L46 58 M59 24 L69 45" {...fineLine} />
+        </>
+      );
+      break;
+    case 'gate':
+      art = (
+        <>
+          <path d="M25 84 V46 C25 24 75 24 75 46 V84" {...line} />
+          <path d="M37 84 V50 C37 39 63 39 63 50 V84 M25 61 H75" {...fineLine} />
+        </>
+      );
+      break;
+    case 'wheel':
+      art = (
+        <>
+          <circle cx="50" cy="50" r="34" {...line} />
+          <circle cx="50" cy="50" r="10" {...fineLine} />
+          <path d="M50 16 V40 M50 60 V84 M16 50 H40 M60 50 H84 M26 26 L43 43 M57 57 L74 74 M74 26 L57 43 M43 57 L26 74" {...fineLine} />
+        </>
+      );
+      break;
+    case 'speedometer':
+      art = (
+        <>
+          <path d="M18 72 C21 38 35 22 50 22 C65 22 79 38 82 72" {...line} />
+          <path d="M50 66 L72 39 M25 72 H75" {...line} />
+          <path d="M29 55 L21 51 M50 28 V20 M71 55 L79 51" {...fineLine} />
+        </>
+      );
+      break;
+    case 'nitro':
+      art = (
+        <>
+          <path d="M40 22 H60 V34 C69 40 72 51 72 66 C72 81 28 81 28 66 C28 51 31 40 40 34 Z" {...line} />
+          <path d="M37 52 H63 M41 64 H59" {...fineLine} />
+        </>
+      );
+      break;
+    case 'road':
+      art = (
+        <>
+          <path d="M36 18 L18 86 M64 18 L82 86" {...line} />
+          <path d="M50 24 V36 M50 48 V60 M50 72 V84" {...fineLine} />
+        </>
+      );
+      break;
+    case 'gunbarrel':
+      art = (
+        <>
+          <circle cx="50" cy="50" r="34" {...line} />
+          <circle cx="50" cy="50" r="14" {...fineLine} />
+          {[0, 30, 60, 90, 120, 150].map(angle => (
+            <path key={angle} d="M50 16 C62 29 62 71 50 84" {...fineLine} transform={`rotate(${angle} 50 50)`} />
+          ))}
+        </>
+      );
+      break;
+    case 'martini':
+      art = (
+        <>
+          <path d="M22 24 H78 L50 56 Z" {...line} />
+          <path d="M50 56 V82 M34 82 H66 M60 30 L72 18" {...line} />
+          <circle cx="76" cy="15" r="5" {...fineLine} />
+        </>
+      );
+      break;
+    case 'diamondSuit':
+      art = <path d="M50 14 L78 50 L50 86 L22 50 Z" {...line} />;
+      break;
+    case 'playingCard':
+    default:
+      art = (
+        <>
+          <rect x="26" y="16" width="48" height="68" rx="7" {...line} />
+          <path d="M50 34 L62 50 L50 66 L38 50 Z" {...fineLine} />
+        </>
+      );
+      break;
+  }
+
+  return (
+    <div style={base}>
+      <svg viewBox="0 0 100 100" fill="none" role="presentation" focusable="false" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+        {art}
+      </svg>
+    </div>
+  );
+}
+
+function ThemedFranchiseAmbientBackground({ config }: { config: ThemedAmbientConfig }) {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: 'none',
+        overflow: 'hidden',
+        background: `radial-gradient(circle at 12% 12%, ${config.accent}, transparent 28%), radial-gradient(circle at 88% 18%, rgba(214,211,209,.09), transparent 26%), radial-gradient(circle at 54% 112%, ${config.glow}, transparent 36%), #000`,
+      }}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          opacity: 0.16,
+          backgroundImage: `linear-gradient(90deg, rgba(255,255,255,.12) 0 1px, transparent 1px), linear-gradient(${config.grid} 0 1px, transparent 1px)`,
+          backgroundSize: '92px 92px',
+          maskImage: 'linear-gradient(to bottom, rgba(0,0,0,.92), rgba(0,0,0,.36) 58%, rgba(0,0,0,.9))',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          opacity: 0.1,
+          backgroundImage: `radial-gradient(circle, ${config.dots} 0 1px, transparent 1.7px), radial-gradient(circle, rgba(255,255,255,.34) 0 1px, transparent 1.7px)`,
+          backgroundSize: '132px 132px, 218px 218px',
+          backgroundPosition: '0 0, 68px 42px',
+        }}
+      />
+      {config.glyphs.map((glyph, index) => (
+        <ThemedFranchiseGlyph key={`${glyph.variant}-${index}`} {...glyph} glow={config.glow} />
+      ))}
+    </div>
+  );
+}
+
+const EXTRA_AMBIENT_BACKGROUNDS: Record<string, ThemedAmbientConfig> = {
+  jurassic_park: {
+    accent: 'rgba(132,204,22,.13)',
+    glow: 'rgba(132,204,22,.16)',
+    grid: 'rgba(132,204,22,.14)',
+    dots: 'rgba(132,204,22,.62)',
+    glyphs: [
+      { variant: 'footprint', top: '7%', left: '5%', size: 184, rotate: -12, opacity: 0.12 },
+      { variant: 'clawMark', top: '12%', right: '9%', size: 168, rotate: 10, opacity: 0.105 },
+      { variant: 'amber', top: '39%', left: '-2%', size: 214, rotate: -8, opacity: 0.075 },
+      { variant: 'dna', top: '37%', right: '8%', size: 164, rotate: 12, opacity: 0.09 },
+      { variant: 'bone', bottom: '8%', left: '12%', size: 158, rotate: -15, opacity: 0.085 },
+      { variant: 'footprint', bottom: '3%', right: '5%', size: 206, rotate: 15, opacity: 0.07 },
+    ],
+  },
+  indiana_jones: {
+    accent: 'rgba(245,158,11,.13)',
+    glow: 'rgba(245,158,11,.15)',
+    grid: 'rgba(245,158,11,.13)',
+    dots: 'rgba(245,158,11,.58)',
+    glyphs: [
+      { variant: 'fedora', top: '8%', left: '6%', size: 186, rotate: -8, opacity: 0.12 },
+      { variant: 'compass', top: '11%', right: '9%', size: 160, rotate: 14, opacity: 0.1 },
+      { variant: 'whip', top: '36%', left: '-1%', size: 226, rotate: -12, opacity: 0.075 },
+      { variant: 'relic', top: '40%', right: '9%', size: 156, rotate: 9, opacity: 0.09 },
+      { variant: 'torch', bottom: '7%', left: '11%', size: 164, rotate: 7, opacity: 0.088 },
+      { variant: 'compass', bottom: '2%', right: '5%', size: 204, rotate: -16, opacity: 0.07 },
+    ],
+  },
+  alien: {
+    accent: 'rgba(34,197,94,.12)',
+    glow: 'rgba(34,197,94,.15)',
+    grid: 'rgba(34,197,94,.12)',
+    dots: 'rgba(34,197,94,.56)',
+    glyphs: [
+      { variant: 'egg', top: '7%', left: '6%', size: 180, rotate: -5, opacity: 0.12 },
+      { variant: 'warning', top: '12%', right: '9%', size: 152, rotate: 10, opacity: 0.105 },
+      { variant: 'corridor', top: '36%', left: '-2%', size: 224, rotate: 2, opacity: 0.07 },
+      { variant: 'xeno', top: '38%', right: '7%', size: 174, rotate: -10, opacity: 0.088 },
+      { variant: 'planet', bottom: '8%', left: '12%', size: 160, rotate: 16, opacity: 0.08 },
+      { variant: 'egg', bottom: '2%', right: '4%', size: 204, rotate: 9, opacity: 0.065 },
+    ],
+  },
+  terminator: {
+    accent: 'rgba(239,68,68,.12)',
+    glow: 'rgba(239,68,68,.15)',
+    grid: 'rgba(239,68,68,.13)',
+    dots: 'rgba(239,68,68,.58)',
+    glyphs: [
+      { variant: 'skull', top: '7%', left: '6%', size: 182, rotate: -6, opacity: 0.118 },
+      { variant: 'scanner', top: '12%', right: '8%', size: 164, rotate: 8, opacity: 0.1 },
+      { variant: 'circuit', top: '37%', left: '-2%', size: 220, rotate: -12, opacity: 0.072 },
+      { variant: 'chip', top: '40%', right: '8%', size: 156, rotate: 14, opacity: 0.09 },
+      { variant: 'warning', bottom: '8%', left: '12%', size: 154, rotate: -13, opacity: 0.083 },
+      { variant: 'skull', bottom: '1%', right: '4%', size: 208, rotate: 11, opacity: 0.064 },
+    ],
+  },
+  transformers: {
+    accent: 'rgba(59,130,246,.13)',
+    glow: 'rgba(59,130,246,.16)',
+    grid: 'rgba(59,130,246,.13)',
+    dots: 'rgba(59,130,246,.6)',
+    glyphs: [
+      { variant: 'robotFace', top: '7%', left: '6%', size: 184, rotate: -6, opacity: 0.115 },
+      { variant: 'cube', top: '12%', right: '9%', size: 164, rotate: 12, opacity: 0.102 },
+      { variant: 'gear', top: '38%', left: '-2%', size: 218, rotate: 12, opacity: 0.072 },
+      { variant: 'spark', top: '39%', right: '8%', size: 158, rotate: -10, opacity: 0.09 },
+      { variant: 'chevrons', bottom: '8%', left: '11%', size: 160, rotate: -8, opacity: 0.084 },
+      { variant: 'robotFace', bottom: '2%', right: '4%', size: 208, rotate: 10, opacity: 0.066 },
+    ],
+  },
+  mission_impossible: {
+    accent: 'rgba(248,113,113,.12)',
+    glow: 'rgba(248,113,113,.15)',
+    grid: 'rgba(248,113,113,.13)',
+    dots: 'rgba(248,113,113,.58)',
+    glyphs: [
+      { variant: 'fuse', top: '7%', left: '5%', size: 190, rotate: -12, opacity: 0.12 },
+      { variant: 'timer', top: '12%', right: '8%', size: 158, rotate: 8, opacity: 0.1 },
+      { variant: 'laser', top: '36%', left: '-2%', size: 222, rotate: -6, opacity: 0.074 },
+      { variant: 'vault', top: '39%', right: '8%', size: 162, rotate: 13, opacity: 0.09 },
+      { variant: 'warning', bottom: '8%', left: '12%', size: 156, rotate: -14, opacity: 0.083 },
+      { variant: 'fuse', bottom: '2%', right: '4%', size: 204, rotate: 10, opacity: 0.066 },
+    ],
+  },
+  harry_potter: {
+    accent: 'rgba(168,85,247,.13)',
+    glow: 'rgba(168,85,247,.15)',
+    grid: 'rgba(168,85,247,.13)',
+    dots: 'rgba(168,85,247,.6)',
+    glyphs: [
+      { variant: 'wand', top: '7%', left: '6%', size: 184, rotate: -14, opacity: 0.118 },
+      { variant: 'glasses', top: '12%', right: '9%', size: 160, rotate: 7, opacity: 0.105 },
+      { variant: 'tower', top: '37%', left: '-1%', size: 218, rotate: -6, opacity: 0.072 },
+      { variant: 'snitch', top: '40%', right: '8%', size: 160, rotate: 12, opacity: 0.09 },
+      { variant: 'starburst', bottom: '8%', left: '12%', size: 152, rotate: -8, opacity: 0.085 },
+      { variant: 'wand', bottom: '2%', right: '4%', size: 208, rotate: 15, opacity: 0.066 },
+    ],
+  },
+  lotr: {
+    accent: 'rgba(250,204,21,.12)',
+    glow: 'rgba(250,204,21,.15)',
+    grid: 'rgba(250,204,21,.12)',
+    dots: 'rgba(250,204,21,.56)',
+    glyphs: [
+      { variant: 'ring', top: '7%', left: '6%', size: 186, rotate: -6, opacity: 0.12 },
+      { variant: 'sword', top: '10%', right: '9%', size: 166, rotate: 10, opacity: 0.1 },
+      { variant: 'mountain', top: '38%', left: '-2%', size: 220, rotate: 3, opacity: 0.074 },
+      { variant: 'leaf', top: '40%', right: '9%', size: 156, rotate: -12, opacity: 0.09 },
+      { variant: 'gate', bottom: '7%', left: '12%', size: 162, rotate: 8, opacity: 0.085 },
+      { variant: 'ring', bottom: '2%', right: '4%', size: 210, rotate: 14, opacity: 0.066 },
+    ],
+  },
+  fast_furious: {
+    accent: 'rgba(249,115,22,.13)',
+    glow: 'rgba(249,115,22,.15)',
+    grid: 'rgba(249,115,22,.13)',
+    dots: 'rgba(249,115,22,.6)',
+    glyphs: [
+      { variant: 'wheel', top: '7%', left: '6%', size: 184, rotate: -9, opacity: 0.116 },
+      { variant: 'speedometer', top: '12%', right: '9%', size: 162, rotate: 7, opacity: 0.104 },
+      { variant: 'road', top: '36%', left: '-2%', size: 224, rotate: -6, opacity: 0.074 },
+      { variant: 'nitro', top: '40%', right: '8%', size: 158, rotate: 12, opacity: 0.09 },
+      { variant: 'gear', bottom: '8%', left: '12%', size: 156, rotate: -14, opacity: 0.083 },
+      { variant: 'wheel', bottom: '2%', right: '4%', size: 208, rotate: 14, opacity: 0.066 },
+    ],
+  },
+  james_bond: {
+    accent: 'rgba(148,163,184,.13)',
+    glow: 'rgba(148,163,184,.16)',
+    grid: 'rgba(148,163,184,.13)',
+    dots: 'rgba(148,163,184,.58)',
+    glyphs: [
+      { variant: 'gunbarrel', top: '7%', left: '6%', size: 186, rotate: -7, opacity: 0.116 },
+      { variant: 'martini', top: '12%', right: '9%', size: 160, rotate: 10, opacity: 0.102 },
+      { variant: 'playingCard', top: '38%', left: '-2%', size: 218, rotate: -11, opacity: 0.072 },
+      { variant: 'diamondSuit', top: '41%', right: '9%', size: 154, rotate: 13, opacity: 0.09 },
+      { variant: 'vault', bottom: '8%', left: '12%', size: 158, rotate: -10, opacity: 0.082 },
+      { variant: 'gunbarrel', bottom: '2%', right: '4%', size: 210, rotate: 13, opacity: 0.064 },
+    ],
+  },
+};
+
 export default function FranchisePage({ franchiseId, onBack, onMediaClick }: FranchisePageProps) {
   const { user } = useAuth();
   const franchise = FRANCHISES[franchiseId];
@@ -1399,22 +2128,35 @@ export default function FranchisePage({ franchiseId, onBack, onMediaClick }: Fra
     fetchedFranchiseRef.current = franchiseId;
 
     setPostersLoading(true);
-    setPosterMap({});
     setAutoReleaseEntries([]);
 
     fetchAutoReleaseEntries(franchise).then(setAutoReleaseEntries);
 
-    // Deduplicate curated entries by type+id before fetching
     const seen = new Set<string>();
-    const unique = franchise.entries.filter(e => {
+    const knownMap: Record<string, string | null> = {};
+    const missingPosterEntries: FranchiseEntry[] = [];
+
+    franchise.entries.forEach(e => {
       const k = `${e.type}-${e.id}`;
-      if (seen.has(k)) return false;
+      if (seen.has(k)) return;
       seen.add(k);
-      return true;
+      if (e.posterPath) {
+        knownMap[k] = e.posterPath;
+      } else {
+        missingPosterEntries.push(e);
+      }
     });
 
-    fetchPostersInBatches(unique).then(map => {
-      setPosterMap(map);
+    setPosterMap(knownMap);
+
+    if (missingPosterEntries.length === 0) {
+      preloadPosterImages(Object.values(knownMap)).then(() => setPostersLoading(false));
+      return;
+    }
+
+    fetchPostersInBatches(missingPosterEntries, 12, 25).then(async map => {
+      await preloadPosterImages(Object.values(map));
+      setPosterMap({ ...knownMap, ...map });
       setPostersLoading(false);
     });
   }, [franchiseId, franchise]);
@@ -1459,6 +2201,7 @@ export default function FranchisePage({ franchiseId, onBack, onMediaClick }: Fra
   const progress = totalEntries > 0 ? (watchedCount / totalEntries) * 100 : 0;
   const hasChronological = !!franchise.chronological;
   const hasTV = allEntries.some(e => e.type === 'tv');
+  const themedAmbientConfig = EXTRA_AMBIENT_BACKGROUNDS[franchiseId];
 
   return (
     <div style={{ minHeight: '100vh', background: '#000', paddingBottom: 96, position: 'relative' }} className="animate-fade-in">
@@ -1466,6 +2209,8 @@ export default function FranchisePage({ franchiseId, onBack, onMediaClick }: Fra
       {franchiseId === 'star_wars' && <StarWarsAmbientBackground />}
       {franchiseId === 'dc' && <DCAmbientBackground />}
       {franchiseId === 'john_wick' && <JohnWickAmbientBackground />}
+      {themedAmbientConfig && <ThemedFranchiseAmbientBackground config={themedAmbientConfig} />}
+      <FranchiseIdentityBackdrop franchiseId={franchiseId} color={franchise.color} />
 
       {/* Sticky header */}
       <div style={{ position: 'sticky', top: 56, zIndex: 10, background: 'rgba(0,0,0,.95)', backdropFilter: 'blur(8px)', borderBottom: '1px solid #1a1a1a', padding: '14px clamp(16px,4vw,48px)', display: 'flex', alignItems: 'center', gap: 14 }}>

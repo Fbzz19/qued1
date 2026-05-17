@@ -22,11 +22,13 @@ interface ProfilePageProps {
 }
 
 type ProfileTab = 'diary' | 'stats' | 'achievements';
+type RatingMap = Record<string, number>;
 
 export default function ProfilePage({ onMediaClick, onDiaryClick, onSettingsClick, onMemberClick, onStatsClick, onLeaderboardsClick, onProClick }: ProfilePageProps) {
   const { user, profile, signOut } = useAuth();
 
   const [watched,    setWatched]    = useState<WatchedEntry[]>([]);
+  const [ratings,    setRatings]    = useState<RatingMap>({});
   const [watchlist,  setWatchlist]  = useState<WatchlistItem[]>([]);
   const [stats,      setStats]      = useState({ movies: 0, shows: 0, movieMins: 0, showMins: 0, followers: 0, following: 0, reviews: 0, likes: 0 });
   const [activeTab,  setActiveTab]  = useState<ProfileTab>('diary');
@@ -52,9 +54,15 @@ export default function ProfilePage({ onMediaClick, onDiaryClick, onSettingsClic
       supabase.from('follows').select('id').eq('follower_id', user.id),
       supabase.from('reviews').select('id').eq('user_id', user.id),
       supabase.from('likes').select('watched_id').eq('user_id', user.id),
-    ]).then(([wr, wlr, flr, fgr, revr, lkr]) => {
+      supabase.from('ratings').select('tmdb_id, media_type, rating').eq('user_id', user.id),
+    ]).then(([wr, wlr, flr, fgr, revr, lkr, rr]) => {
       const w = (wr.data ?? []) as WatchedEntry[];
+      const ratingMap: RatingMap = {};
+      (rr.data ?? []).forEach((row: { tmdb_id: number; media_type: string; rating: number }) => {
+        ratingMap[`${row.tmdb_id}-${row.media_type}`] = Number(row.rating);
+      });
       setWatched(w);
+      setRatings(ratingMap);
       setWatchlist((wlr.data ?? []) as WatchlistItem[]);
       const movies = w.filter(e => e.media_type === 'movie');
       const shows  = w.filter(e => e.media_type === 'tv');
@@ -284,6 +292,7 @@ export default function ProfilePage({ onMediaClick, onDiaryClick, onSettingsClic
             ) : (
               watched.map(item => {
                 const ps = posterUrl(item.poster_path);
+                const rating = ratings[`${item.tmdb_id}-${item.media_type}`];
                 const d = new Date(item.watched_date + 'T00:00:00');
                 const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                 return (
@@ -301,6 +310,12 @@ export default function ProfilePage({ onMediaClick, onDiaryClick, onSettingsClic
                         <span style={{ fontSize: 10, padding: '1px 7px', borderRadius: 20, background: item.media_type === 'movie' ? 'rgba(245,158,11,.15)' : 'rgba(96,165,250,.15)', color: item.media_type === 'movie' ? '#fbbf24' : '#60a5fa' }}>
                           {item.media_type === 'movie' ? 'Film' : 'TV'}
                         </span>
+                        {rating != null && (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#fbbf24', fontSize: 11, fontWeight: 700 }}>
+                            <Star size={10} color="#f59e0b" fill="#f59e0b" />
+                            {rating}
+                          </span>
+                        )}
                         {item.liked && <Heart size={10} color="#f87171" fill="#f87171" />}
                       </div>
                     </div>

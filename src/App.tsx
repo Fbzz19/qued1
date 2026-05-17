@@ -1,30 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
 import { Clapperboard } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { I18nProvider } from './context/I18nContext';
 import HomePage from './pages/HomePage';
-import SearchPage from './pages/SearchPage';
-import MediaDetailPage from './pages/MediaDetailPage';
-import ActorPage from './pages/ActorPage';
-import ProfilePage from './pages/ProfilePage';
-import AIComingSoonPage from './pages/AIComingSoonPage';
-import ActivityFeedPage from './pages/ActivityFeedPage';
-import FilmsPage from './pages/FilmsPage';
-import TVShowsPage from './pages/TVShowsPage';
-import MembersPage from './pages/MembersPage';
-import PublicProfilePage from './pages/PublicProfilePage';
-import WatchedPage from './pages/WatchedPage';
-import DiaryPage from './pages/DiaryPage';
-import SettingsPage from './pages/SettingsPage';
-import PrivacyPage from './pages/PrivacyPage';
-import TermsPage from './pages/TermsPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import FranchisePage from './pages/FranchisePage';
-import WatchOrderPage from './pages/WatchOrderPage';
-import AdminPage from './pages/AdminPage';
-import ProPage from './pages/ProPage';
-import LeaderboardsPage from './pages/LeaderboardsPage';
-import StatsPage from './pages/StatsPage';
 import TopNav from './components/TopNav';
 import type { NavTab } from './components/TopNav';
 import BottomNav from './components/BottomNav';
@@ -35,6 +13,54 @@ import CookieBanner from './components/CookieBanner';
 import Footer from './components/Footer';
 import OnboardingFlow from './components/OnboardingFlow';
 import { supabase } from './lib/supabase';
+
+const pageImports = {
+  search: () => import('./pages/SearchPage'),
+  mediaDetail: () => import('./pages/MediaDetailPage'),
+  actor: () => import('./pages/ActorPage'),
+  profile: () => import('./pages/ProfilePage'),
+  ai: () => import('./pages/AIComingSoonPage'),
+  feed: () => import('./pages/ActivityFeedPage'),
+  films: () => import('./pages/FilmsPage'),
+  tv: () => import('./pages/TVShowsPage'),
+  members: () => import('./pages/MembersPage'),
+  publicProfile: () => import('./pages/PublicProfilePage'),
+  watched: () => import('./pages/WatchedPage'),
+  diary: () => import('./pages/DiaryPage'),
+  settings: () => import('./pages/SettingsPage'),
+  privacy: () => import('./pages/PrivacyPage'),
+  terms: () => import('./pages/TermsPage'),
+  resetPassword: () => import('./pages/ResetPasswordPage'),
+  franchise: () => import('./pages/FranchisePage'),
+  watchOrder: () => import('./pages/WatchOrderPage'),
+  admin: () => import('./pages/AdminPage'),
+  pro: () => import('./pages/ProPage'),
+  leaderboards: () => import('./pages/LeaderboardsPage'),
+  stats: () => import('./pages/StatsPage'),
+};
+
+const SearchPage = lazy(pageImports.search);
+const MediaDetailPage = lazy(pageImports.mediaDetail);
+const ActorPage = lazy(pageImports.actor);
+const ProfilePage = lazy(pageImports.profile);
+const AIComingSoonPage = lazy(pageImports.ai);
+const ActivityFeedPage = lazy(pageImports.feed);
+const FilmsPage = lazy(pageImports.films);
+const TVShowsPage = lazy(pageImports.tv);
+const MembersPage = lazy(pageImports.members);
+const PublicProfilePage = lazy(pageImports.publicProfile);
+const WatchedPage = lazy(pageImports.watched);
+const DiaryPage = lazy(pageImports.diary);
+const SettingsPage = lazy(pageImports.settings);
+const PrivacyPage = lazy(pageImports.privacy);
+const TermsPage = lazy(pageImports.terms);
+const ResetPasswordPage = lazy(pageImports.resetPassword);
+const FranchisePage = lazy(pageImports.franchise);
+const WatchOrderPage = lazy(pageImports.watchOrder);
+const AdminPage = lazy(pageImports.admin);
+const ProPage = lazy(pageImports.pro);
+const LeaderboardsPage = lazy(pageImports.leaderboards);
+const StatsPage = lazy(pageImports.stats);
 
 type Screen =
   | { kind: 'tab';      tab: NavTab }
@@ -53,6 +79,18 @@ type Screen =
   | { kind: 'pro' }
   | { kind: 'leaderboards' }
   | { kind: 'stats' };
+
+function PageFallback() {
+  return (
+    <div style={{ minHeight: '60vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', gap: 8 }} aria-label="Loading page">
+        {[0, 150, 300].map(d => (
+          <div key={d} style={{ width: 8, height: 8, background: '#f59e0b', borderRadius: '50%', animation: `bounceDot 1.4s ${d}ms infinite` }} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ── Login Transition Overlay ──────────────────────────────────────────────────
 // Steps: 0-400ms fade to black → 400-900ms logo fades in + pulse → 900-1200ms welcome text
@@ -124,7 +162,7 @@ function LoginTransition({ anim, username }: { anim: 'idle' | 'playing' | 'done'
 }
 
 function AppContent() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
   const [screen,        setScreen]        = useState<Screen>({ kind: 'tab', tab: 'home' });
   const [quickAddOpen,  setQuickAddOpen]  = useState(false);
   const [quickAddMedia, setQuickAddMedia] = useState<QuickAddMedia | null>(null);
@@ -185,6 +223,28 @@ function AppContent() {
       if (!data) setShowOnboarding(true);
     })();
   }, [user]);
+
+  useEffect(() => {
+    if (loading) return;
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    if (connection?.saveData || connection?.effectiveType === '2g' || connection?.effectiveType === 'slow-2g') return;
+
+    const timer = window.setTimeout(() => {
+      const commonPages = [
+        pageImports.search,
+        pageImports.films,
+        pageImports.tv,
+        pageImports.members,
+        pageImports.watchOrder,
+        pageImports.mediaDetail,
+        pageImports.pro,
+        ...(user ? [pageImports.profile, pageImports.settings, pageImports.stats] : []),
+      ];
+      commonPages.forEach(loadPage => { void loadPage(); });
+    }, 1600);
+
+    return () => window.clearTimeout(timer);
+  }, [loading, user]);
 
   // On sign-out: redirect to home and clear protected screens
   useEffect(() => {
@@ -315,12 +375,16 @@ function AppContent() {
   function goStats() {
     navigate({ kind: 'stats' });
   }
+  async function handleSignOut() {
+    await signOut();
+    navigate({ kind: 'tab', tab: 'home' });
+  }
   function handleNotificationNavigate(type: string, _refId: string | null) {
-    if (type === 'follow' || type === 'review_like' || type === 'review_comment') navigate({ kind: 'profile' });
+    if (type === 'follow' || type === 'review_like' || type === 'review_comment' || type === 'review_comment_like') navigate({ kind: 'profile' });
     else navigate({ kind: 'tab', tab: 'feed' });
   }
 
-  const showFooter = screen.kind === 'tab' || screen.kind === 'privacy' || screen.kind === 'terms';
+  const showFooter = screen.kind === 'tab' || screen.kind === 'privacy' || screen.kind === 'terms' || screen.kind === 'pro';
 
   return (
     <div style={{ minHeight: '100vh', background: '#000' }}>
@@ -330,6 +394,8 @@ function AppContent() {
         onSignIn={() => setAuthModal({ mode: 'login' })}
         onSignUp={() => setAuthModal({ mode: 'signup' })}
         onMyProfile={goMyProfile}
+        onSettings={() => navigate({ kind: 'settings' })}
+        onSignOut={handleSignOut}
         isLoggedIn={!!user}
         username={profile?.username}
         avatarUrl={profile?.avatar_url}
@@ -341,6 +407,7 @@ function AppContent() {
       />
 
       <main style={{ paddingTop: 56 }}>
+        <Suspense fallback={<PageFallback />}>
         {screen.kind === 'tab' && screen.tab === 'home'    && <HomePage    onMediaClick={goMedia} onSignUp={() => setAuthModal({ mode: 'signup' })} onFilmsClick={() => goTab('films')} onSearchClick={() => goTab('search')} onMembersClick={() => goTab('members')} onMemberProfileClick={userId => navigate({ kind: 'member', userId, from: 'home' })} />}
         {screen.kind === 'tab' && screen.tab === 'films'   && <FilmsPage   onMediaClick={goMedia} />}
         {screen.kind === 'tab' && screen.tab === 'tv'      && <TVShowsPage onMediaClick={goMedia} />}
@@ -430,9 +497,7 @@ function AppContent() {
         {screen.kind === 'admin' && (
           <AdminPage onBack={goBack} onMediaClick={goMedia} />
         )}
-        {screen.kind === 'pro' && (
-          <ProPage onBack={goBack} onUpgrade={() => {}} />
-        )}
+        {screen.kind === 'pro' && <ProPage />}
         {screen.kind === 'leaderboards' && (
           <LeaderboardsPage
             onBack={goBack}
@@ -442,6 +507,7 @@ function AppContent() {
         {screen.kind === 'stats' && (
           <StatsPage onBack={goBack} onProClick={goPro} />
         )}
+        </Suspense>
 
         {showFooter && (
           <Footer

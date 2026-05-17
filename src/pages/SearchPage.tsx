@@ -128,7 +128,7 @@ export default function SearchPage({ onMediaClick }: SearchPageProps) {
                 return (
                   <div key={item.id} className="poster-card" style={{ aspectRatio: '2/3' }} onClick={() => onMediaClick(item.id, type)}>
                     {url
-                      ? <img src={url} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                      ? <img src={url} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" decoding="async" />
                       : <NoImg title={title} />}
                     <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top,rgba(0,0,0,.9),transparent)', padding: '16px 6px 6px' }}>
                       <p style={{ margin: 0, color: '#fff', fontSize: 10, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</p>
@@ -301,7 +301,7 @@ function PosterCell({ item, type, onMediaClick }: { item: TMDBMedia; type: 'movi
   return (
     <div className="poster-card" style={{ aspectRatio: '2/3' }} onClick={() => onMediaClick(item.id, (item.media_type as 'movie' | 'tv') ?? type)}>
       {url
-        ? <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+        ? <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" decoding="async" />
         : <NoImg title={item.title || item.name || ''} />}
     </div>
   );
